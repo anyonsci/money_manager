@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { TransactionList } from '../components/transactions/TransactionList';
 import { TransactionModal } from '../components/transactions/TransactionModal';
 import { useTransactions } from '../context/TransactionContext';
@@ -11,11 +11,18 @@ export const TransactionsPage = () => {
     page,
     totalPages,
     loading,
+    hasLoadedInitially,
     loadTransactions,
     createTransactionItem,
     updateTransactionItem,
     deleteTransactionItem
   } = useTransactions();
+
+  useEffect(() => {
+    if (!hasLoadedInitially && !loading) {
+      loadTransactions(1);
+    }
+  }, [hasLoadedInitially, loading, loadTransactions]);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [mode, setMode] = useState<'create' | 'edit'>('create');

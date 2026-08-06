@@ -1,11 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AnalyticsSummary } from '../components/analytics/AnalyticsSummary';
 import { CategoryPieChart } from '../components/analytics/CategoryPieChart';
 import { useTransactions } from '../context/TransactionContext';
 
 export const AnalyticsPage = () => {
-  const { transactions } = useTransactions();
+  const { transactions, loading, hasLoadedInitially, loadTransactions } = useTransactions();
   const [range, setRange] = useState<'month' | 'all'>('month');
+
+  useEffect(() => {
+    if (!hasLoadedInitially && !loading) {
+      loadTransactions(1);
+    }
+  }, [hasLoadedInitially, loading, loadTransactions]);
 
   const filteredTransactions = useMemo(() => {
     const now = new Date();

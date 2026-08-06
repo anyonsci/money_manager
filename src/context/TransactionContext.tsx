@@ -10,6 +10,7 @@ interface TransactionContextType {
   page: number;
   totalPages: number;
   loading: boolean;
+  hasLoadedInitially: boolean;
   loadTransactions: (nextPage?: number, forceRefresh?: boolean) => Promise<void>;
   createTransactionItem: (values: TransactionFormValues) => Promise<Transaction | undefined>;
   updateTransactionItem: (selectedTransaction: Transaction, values: TransactionFormValues) => Promise<Transaction | undefined>;
@@ -52,7 +53,11 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   useEffect(() => {
     if (idToken && !hasLoadedInitially) {
-      loadTransactions(1);
+      const isHome = window.location.hash === '#/' || window.location.hash === '' || window.location.pathname === '/';
+      // Do NOT fetch history at all on home page (user enters transaction and closes)
+      if (!isHome) {
+        loadTransactions(1);
+      }
     }
   }, [idToken, hasLoadedInitially, loadTransactions]);
 
@@ -98,6 +103,7 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
         page,
         totalPages,
         loading,
+        hasLoadedInitially,
         loadTransactions,
         createTransactionItem,
         updateTransactionItem,
