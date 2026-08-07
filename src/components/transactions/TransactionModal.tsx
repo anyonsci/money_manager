@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Transaction, TransactionFormValues } from '../../types';
 import { Modal } from '../layout/Modal';
+import { ALLOWED_CATEGORIES } from '../../constants/categories';
 
 interface TransactionModalProps {
   open: boolean;
@@ -14,7 +15,7 @@ interface TransactionModalProps {
 const defaultValues: TransactionFormValues = {
   amount: '',
   account: 'Checking',
-  category: 'Groceries',
+  category: ALLOWED_CATEGORIES[0],
   subCategory: '',
   note: '',
   type: 'expense',
@@ -103,22 +104,59 @@ export const TransactionModal = ({ open, mode, transaction, onClose, onSubmit, o
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
-          <label className="block text-sm text-slate-300">
-            <span className="mb-1 block">Category</span>
-            <select
-              value={values.category}
-              onChange={(event) => setValues((prev) => ({ ...prev, category: event.target.value }))}
-              className="w-full rounded-2xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-white outline-none ring-0"
-            >
-              <option>Groceries</option>
-              <option>Dining</option>
-              <option>Transport</option>
-              <option>Utilities</option>
-              <option>Salary</option>
-              <option>Freelance</option>
-              <option>Rent</option>
-            </select>
-          </label>
+          <div className="block text-sm text-slate-300">
+            <label htmlFor="modal-category-input" className="mb-1 block">Category</label>
+            <div className="relative flex items-center">
+              <input
+                id="modal-category-input"
+                required
+                type="text"
+                list="modal-preset-categories"
+                value={values.category}
+                onChange={(event) => setValues((prev) => ({ ...prev, category: event.target.value }))}
+                placeholder="Enter or select category"
+                className="w-full rounded-2xl border border-slate-700 bg-slate-950/70 pl-3 pr-24 py-2 text-white outline-none ring-0 focus:border-brand-500"
+              />
+              <select
+                value=""
+                onChange={(event) => {
+                  if (event.target.value) {
+                    setValues((prev) => ({ ...prev, category: event.target.value }));
+                  }
+                }}
+                className="absolute right-1.5 rounded-xl border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-300 outline-none hover:bg-slate-800 hover:text-white cursor-pointer transition"
+                title="Select pre-decided category"
+              >
+                <option value="" disabled>Presets ▼</option>
+                {ALLOWED_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat} className="bg-slate-900 text-white">
+                    {cat}
+                  </option>
+                ))}
+              </select>
+              <datalist id="modal-preset-categories">
+                {ALLOWED_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat} />
+                ))}
+              </datalist>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {ALLOWED_CATEGORIES.slice(0, 6).map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setValues((prev) => ({ ...prev, category: cat }))}
+                  className={`rounded-lg border px-2 py-0.5 text-xs transition ${
+                    values.category.toLowerCase() === cat.toLowerCase()
+                      ? 'border-brand-500 bg-brand-600/20 text-brand-300 font-medium'
+                      : 'border-slate-800 bg-slate-900/50 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
           <label className="block text-sm text-slate-300">
             <span className="mb-1 block">Type</span>
             <select
@@ -138,7 +176,7 @@ export const TransactionModal = ({ open, mode, transaction, onClose, onSubmit, o
             value={values.note}
             onChange={(event) => setValues((prev) => ({ ...prev, note: event.target.value }))}
             className="w-full rounded-2xl border border-slate-700 bg-slate-950/70 px-3 py-2 text-white outline-none ring-0"
-            placeholder="Weekly groceries"
+            placeholder="Weekly need"
           />
         </label>
 

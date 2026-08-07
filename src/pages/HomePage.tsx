@@ -3,6 +3,7 @@ import { useTransactions } from '../context/TransactionContext';
 import { TransactionFormValues } from '../types';
 import { ArrowRight, CheckCircle2, AlertCircle, Loader2, Sparkles, Plus } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
+import { ALLOWED_CATEGORIES, isAllowedCategory, getCanonicalCategory } from '../constants/categories';
 
 interface ParsedResult {
   valid: boolean;
@@ -13,15 +14,18 @@ interface ParsedResult {
 export const parseCsvTransaction = (input: string): ParsedResult => {
   const trimmed = input.trim();
   if (!trimmed) {
-    return { valid: false, error: 'Enter entry as: amount, account, category [- subcategory][, note]' };
+    return { valid: false, error: 'Enter entry as: amount  account  category [- subcategory]  [note] (or with commas)' };
   }
 
-  const parts = trimmed.split(',').map((p) => p.trim());
+  const parts = trimmed
+    .split(/,|\s{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
 
   if (parts.length < 3) {
     return {
       valid: false,
-      error: 'CSV requires at least 3 parts: amount, account, category'
+      error: 'Requires at least 3 parts (separated by commas or 2+ spaces): amount, account, category'
     };
   }
 
@@ -61,6 +65,15 @@ export const parseCsvTransaction = (input: string): ParsedResult => {
   if (!category) {
     return { valid: false, error: 'Category name cannot be empty.' };
   }
+
+  if (!isAllowedCategory(category)) {
+    return {
+      valid: false,
+      error: `Category "${category}" is invalid. Allowed categories: ${ALLOWED_CATEGORIES.join(', ')}`
+    };
+  }
+
+  category = getCanonicalCategory(category);
 
   let type: 'expense' | 'income' = 'expense';
   const catLower = category.toLowerCase();
@@ -107,6 +120,34 @@ export const HomePage: React.FC = () => {
     if (!input.trim()) return null;
     return parseCsvTransaction(input);
   }, [input]);
+
+  const handlePillClick = (catName: string) => {
+    if (!input.trim()) {
+      setInput(`30  Checking  ${catName}`);
+      return;
+    }
+    const usesSpaceSep = /\s{2,}/.test(input) && !input.includes(',');
+    const sep = usesSpaceSep ? '  ' : ', ';
+    const parts = input
+      .split(/,|\s{2,}/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    if (parts.length >= 3) {
+      let catSub = catName;
+      if (parts[2].includes('-')) {
+        const sub = parts[2].split('-')[1];
+        catSub = `${catName} - ${sub.trim()}`;
+      }
+      parts[2] = catSub;
+      setInput(parts.join(sep));
+    } else if (parts.length === 2) {
+      setInput(`${input.trimEnd()}${sep}${catName}`);
+    } else {
+      setInput(`${input.trimEnd()}${sep}Checking${sep}${catName}`);
+    }
+    inputRef.current?.focus();
+  };
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -177,6 +218,7 @@ export const HomePage: React.FC = () => {
           <input
             ref={inputRef}
             type="text"
+            list="quick-entry-categories"
             value={input}
             onChange={(e) => {
               setInput(e.target.value);
@@ -185,20 +227,40 @@ export const HomePage: React.FC = () => {
               }
             }}
             disabled={saving}
-            placeholder="30, HDFC, Food - Groceries, Lunch note"
+            placeholder="30  HDFC  Groceries - Supermarket  Lunch note"
             className="w-full pl-12 pr-14 py-4 sm:py-5 bg-slate-900/90 text-white placeholder-slate-500 rounded-3xl border-2 border-slate-800 shadow-2xl focus:border-brand-500 focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/20 text-base sm:text-lg transition-all duration-200"
             autoComplete="off"
             spellCheck={false}
           />
+          <datalist id="quick-entry-categories">
+            {ALLOWED_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat} />
+            ))}
+          </datalist>
 
           <button
             type="submit"
-            disabled={saving || !input.trim()}
+            disabled={saving || !input.trim() || (parsed !== null && !parsed.valid)}
             className="absolute inset-y-2 right-2 px-4 flex items-center justify-center bg-brand-600 hover:bg-brand-500 disabled:opacity-40 disabled:hover:bg-brand-600 text-white rounded-2xl transition-all duration-150 active:scale-95 shadow-md"
             title="Save Transaction (Enter)"
           >
             {saving ? <Loader2 size={20} className="animate-spin" /> : <ArrowRight size={20} />}
           </button>
+        </div>
+
+        {/* Allowed Categories Quick Pick Pills */}
+        <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
+          <span className="text-xs text-slate-500 mr-1">Allowed Categories:</span>
+          {ALLOWED_CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => handlePillClick(cat)}
+              className="rounded-full border border-slate-800 bg-slate-900/70 px-2.5 py-1 text-xs text-slate-300 transition hover:border-brand-500/50 hover:bg-brand-600/10 hover:text-brand-300"
+            >
+              {cat}
+            </button>
+          ))}
         </div>
 
         {/* Live Parsing Preview (if user typing) */}
@@ -212,7 +274,7 @@ export const HomePage: React.FC = () => {
                 <span className="text-slate-600">•</span>
                 <span>Account: <strong className="text-slate-200">{parsed.values.account}</strong></span>
                 <span className="text-slate-600">•</span>
-                <span>Category: <strong className="text-slate-200">{parsed.values.category}</strong></span>
+                <span>Category: <strong className="text-emerald-300">{parsed.values.category}</strong></span>
                 {parsed.values.subCategory && (
                   <>
                     <span className="text-slate-600">•</span>
@@ -260,7 +322,7 @@ export const HomePage: React.FC = () => {
         {/* Syntax guide footer */}
         <div className="pt-4 text-center">
           <p className="text-xs text-slate-500">
-            Format: <code className="text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">amount, account, category [- subcategory][, note]</code>
+            Format: <code className="text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">amount  account  category [- subcategory]  [note]</code> (separated by commas or 2+ spaces)
           </p>
         </div>
       </form>
@@ -269,3 +331,5 @@ export const HomePage: React.FC = () => {
 };
 
 export default HomePage;
+
+
