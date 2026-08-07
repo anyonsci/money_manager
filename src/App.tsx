@@ -18,7 +18,7 @@ const PageLoader = () => (
 );
 
 function App() {
-  const { idToken } = useAuth();
+  const { accessToken, isLoading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,9 +27,17 @@ function App() {
     }
   }, [navigate]);
 
+  if (isLoading) {
+    return (
+      <ResponsiveLayout>
+        <PageLoader />
+      </ResponsiveLayout>
+    );
+  }
+
   return (
     <ResponsiveLayout>
-      {!idToken ? (
+      {!accessToken ? (
         <LoginView />
       ) : (
         <Suspense fallback={<PageLoader />}>

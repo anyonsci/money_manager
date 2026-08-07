@@ -1,8 +1,7 @@
-import { ApiResponse, PaginationMeta, Transaction, TransactionFormValues } from '../types';
-import { getStoredIdToken } from '../utils/auth';
+import { ApiResponse, Transaction, TransactionFormValues } from '../types';
+import { apiClient, getApiUrl } from './apiClient';
 
 const DEFAULT_LIMIT = 8;
-const FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbzYalJCPf4aEQ35VR_fya0zPSoPO0laOaCk0SGbIbB9PFeerzSIgv6x95MD_UlC8Y9B/exec'; // Replace with your fallback URL if needed
 
 const mockTransactions: Transaction[] = [
   {
@@ -110,29 +109,6 @@ const buildMockResponse = (page: number, limit: number): ApiResponse<Transaction
   };
 };
 
-const getApiUrl = () => (import.meta.env.VITE_APPS_SCRIPT_URL || FALLBACK_URL).trim();
-
-export const fetchTransactions = async (page = 1, limit = DEFAULT_LIMIT, customIdToken?: string): Promise<ApiResponse<Transaction>> => {
-  const apiUrl = getApiUrl();
-  if (!apiUrl) {
-    return buildMockResponse(page, limit);
-  }
-
-  const token = customIdToken || getStoredIdToken();
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({
-      action: 'read',
-      page,
-      limit,
-      idToken: token
-    })
-  });
-  const payload = await response.json();
-  return payload as ApiResponse<Transaction>;
-};
-
 const formatIsoTimestamp = (dateString?: string, fallback?: string) => {
   if (!dateString) return fallback || new Date().toISOString();
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
@@ -146,9 +122,23 @@ const formatIsoTimestamp = (dateString?: string, fallback?: string) => {
   }
 };
 
-export const createTransaction = async (values: TransactionFormValues, customIdToken?: string): Promise<Transaction> => {
+export const fetchTransactions = async (page = 1, limit = DEFAULT_LIMIT): Promise<ApiResponse<Transaction>> => {
   const apiUrl = getApiUrl();
-  const token = customIdToken || getStoredIdToken();
+  if (!apiUrl) {
+    return buildMockResponse(page, limit);
+  }
+
+  const response = await apiClient.post(apiUrl, JSON.stringify({
+    action: 'read',
+    page,
+    limit
+  }));
+
+  return response.data as ApiResponse<Transaction>;
+};
+
+export const createTransaction = async (values: TransactionFormValues): Promise<Transaction> => {
+  const apiUrl = getApiUrl();
   const timestamp = formatIsoTimestamp(values.date);
 
   if (!apiUrl) {
@@ -170,30 +160,23 @@ export const createTransaction = async (values: TransactionFormValues, customIdT
     return created;
   }
 
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({
-      action: 'create',
-      idToken: token,
-      timestamp,
-      date: values.date,
-      type: values.type,
-      amount: Number(values.amount),
-      account: values.account,
-      category: values.category,
-      subCategory: values.subCategory,
-      note: values.note
-    })
-  });
+  const response = await apiClient.post(apiUrl, JSON.stringify({
+    action: 'create',
+    timestamp,
+    date: values.date,
+    type: values.type,
+    amount: Number(values.amount),
+    account: values.account,
+    category: values.category,
+    subCategory: values.subCategory,
+    note: values.note
+  }));
 
-  const payload = await response.json();
-  return payload.data as Transaction;
+  return response.data.data as Transaction;
 };
 
-export const updateTransaction = async (transaction: Transaction, values: TransactionFormValues, customIdToken?: string): Promise<Transaction> => {
+export const updateTransaction = async (transaction: Transaction, values: TransactionFormValues): Promise<Transaction> => {
   const apiUrl = getApiUrl();
-  const token = customIdToken || getStoredIdToken();
   const timestamp = formatIsoTimestamp(values.date, transaction.timestamp);
 
   if (!apiUrl) {
@@ -211,31 +194,24 @@ export const updateTransaction = async (transaction: Transaction, values: Transa
     return updated;
   }
 
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({
-      action: 'update',
-      idToken: token,
-      id: transaction.id,
-      timestamp,
-      date: values.date,
-      type: values.type,
-      amount: Number(values.amount),
-      account: values.account,
-      category: values.category,
-      subCategory: values.subCategory,
-      note: values.note
-    })
-  });
+  const response = await apiClient.post(apiUrl, JSON.stringify({
+    action: 'update',
+    id: transaction.id,
+    timestamp,
+    date: values.date,
+    type: values.type,
+    amount: Number(values.amount),
+    account: values.account,
+    category: values.category,
+    subCategory: values.subCategory,
+    note: values.note
+  }));
 
-  const payload = await response.json();
-  return payload.data as Transaction;
+  return response.data.data as Transaction;
 };
 
-export const deleteTransaction = async (transactionId: string, customIdToken?: string): Promise<{ deletedId: string }> => {
+export const deleteTransaction = async (transactionId: string): Promise<{ deletedId: string }> => {
   const apiUrl = getApiUrl();
-  const token = customIdToken || getStoredIdToken();
 
   if (!apiUrl) {
     const index = mockTransactions.findIndex((item) => item.id === transactionId);
@@ -245,17 +221,10 @@ export const deleteTransaction = async (transactionId: string, customIdToken?: s
     return { deletedId: transactionId };
   }
 
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({
-      action: 'delete',
-      idToken: token,
-      id: transactionId
-    })
-  });
+  const response = await apiClient.post(apiUrl, JSON.stringify({
+    action: 'delete',
+    id: transactionId
+  }));
 
-  const payload = await response.json();
-  return payload.data as { deletedId: string };
+  return response.data.data as { deletedId: string };
 };
-
