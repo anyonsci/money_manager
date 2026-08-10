@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "scope": "./",
-  "start_url": "./",
+  "start_url": "./#/",
   "icons": [
     {
       "src": "pwa-192x192.png",
@@ -32,6 +32,15 @@
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick Entry",
+      "short_name": "QuickEdit",
+      "description": "Open Quick Entry form instantly",
+      "url": "./#/",
+      "icons": [{ "src": "pwa-192x192.png", "sizes": "192x192" }]
     }
   ]
 }

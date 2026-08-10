@@ -1,9 +1,9 @@
 // ⚠️ This CACHE_NAME is automatically replaced with a unique build timestamp
 //    by the stampServiceWorker Vite plugin on every `npm run build`.
 //    DO NOT manually edit the version string — it will be overwritten.
-const CACHE_NAME = 'money-manager-cache-v-1786331504719';
+const CACHE_NAME = 'money-manager-cache-v-1786332331618';
 
-// 1. Cache the app shell on install for offline fallback
+// 1. Cache the app shell & Quick Entry UI on install for instant offline fallback
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
@@ -11,6 +11,10 @@ self.addEventListener('install', (event) => {
       return cache.addAll([
         './',
         './index.html',
+        './icon.svg',
+        './pwa-192x192.png',
+        './pwa-512x512.png',
+        './manifest.json'
       ]);
     })
   );
