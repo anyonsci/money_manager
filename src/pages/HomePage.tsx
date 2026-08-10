@@ -14,7 +14,7 @@ interface ParsedResult {
 export const parseCsvTransaction = (input: string): ParsedResult => {
   const trimmed = input.trim();
   if (!trimmed) {
-    return { valid: false, error: 'Enter entry as: amount  account  category [- subcategory]  [note] (or with commas)' };
+    return { valid: false, error: 'Enter entry as: amount  account  category [. subcategory]  [note] (or with commas)' };
   }
 
   const parts = trimmed
@@ -56,10 +56,10 @@ export const parseCsvTransaction = (input: string): ParsedResult => {
 
   let category = rawCategoryPart;
   let subCategory = '';
-  if (rawCategoryPart.includes('-')) {
-    const dashIndex = rawCategoryPart.indexOf('-');
-    category = rawCategoryPart.substring(0, dashIndex).trim();
-    subCategory = rawCategoryPart.substring(dashIndex + 1).trim();
+  if (rawCategoryPart.includes('.')) {
+    const dotIndex = rawCategoryPart.indexOf('.');
+    category = rawCategoryPart.substring(0, dotIndex).trim();
+    subCategory = rawCategoryPart.substring(dotIndex + 1).trim();
   }
 
   if (!category) {
@@ -135,9 +135,9 @@ export const HomePage: React.FC = () => {
 
     if (parts.length >= 3) {
       let catSub = catName;
-      if (parts[2].includes('-')) {
-        const sub = parts[2].split('-')[1];
-        catSub = `${catName} - ${sub.trim()}`;
+      if (parts[2].includes('.')) {
+        const sub = parts[2].split('.')[1];
+        catSub = `${catName}.${sub.trim()}`;
       }
       parts[2] = catSub;
       setInput(parts.join(sep));
@@ -168,7 +168,7 @@ export const HomePage: React.FC = () => {
     try {
       const created = await createTransactionItem(result.values);
       if (created) {
-        const desc = `${formatCurrency(created.amount)} (${created.category}${created.subCategory ? ` - ${created.subCategory}` : ''}) paid via ${created.account}`;
+        const desc = `${formatCurrency(created.amount)} (${created.category}${created.subCategory ? ` . ${created.subCategory}` : ''}) paid via ${created.account}`;
         setLastSavedSummary(desc);
         setStatus({
           type: 'success',
@@ -227,7 +227,7 @@ export const HomePage: React.FC = () => {
               }
             }}
             disabled={saving}
-            placeholder="30  HDFC  Groceries - Supermarket  Lunch note"
+            placeholder="30  HDFC  Groceries.Supermarket  Lunch note"
             className="w-full pl-12 pr-14 py-4 sm:py-5 bg-slate-900/90 text-white placeholder-slate-500 rounded-3xl border-2 border-slate-800 shadow-2xl focus:border-brand-500 focus:bg-slate-900 focus:outline-none focus:ring-4 focus:ring-brand-500/20 text-base sm:text-lg transition-all duration-200"
             autoComplete="off"
             spellCheck={false}
@@ -322,7 +322,7 @@ export const HomePage: React.FC = () => {
         {/* Syntax guide footer */}
         <div className="pt-4 text-center">
           <p className="text-xs text-slate-500">
-            Format: <code className="text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">amount  account  category [- subcategory]  [note]</code> (separated by commas or 2+ spaces)
+            Format: <code className="text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">amount  account  category [. subcategory]  [note]</code> (separated by commas or 2+ spaces)
           </p>
         </div>
       </form>

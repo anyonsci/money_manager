@@ -1,8 +1,87 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
+import fs from 'fs';
+import path from 'path';
+
+function stampServiceWorker() {
+  return {
+    name: 'stamp-service-worker',
+    enforce: 'post' as const,
+    async closeBundle() {
+      // Small delay to ensure Workbox finishes writing dist/sw.js before we overwrite it with custom SW
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      const srcSwPath = path.resolve(__dirname, 'public/sw.js');
+      const distSwPath = path.resolve(__dirname, 'dist/sw.js');
+      if (fs.existsSync(srcSwPath)) {
+        const buildTimestamp = `v-${Date.now()}`;
+        let content = fs.readFileSync(srcSwPath, 'utf-8');
+        content = content.replace(
+          /const CACHE_NAME = ['"].*?['"]/,
+          `const CACHE_NAME = 'money-manager-cache-${buildTimestamp}'`
+        );
+        fs.writeFileSync(distSwPath, content);
+        console.log(`[stampServiceWorker] Stamped dist/sw.js with CACHE_NAME: money-manager-cache-${buildTimestamp}`);
+      }
+    }
+  };
+}
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      injectRegister: null,
+      manifest: {
+        name: 'Money Manager',
+        short_name: 'MoneyManager',
+        description: 'Money Manager - Personal finance tracking built with React and Apps Script',
+        theme_color: '#0f172a',
+        background_color: '#0f172a',
+        display: 'standalone',
+        orientation: 'portrait',
+        scope: './',
+        start_url: './#/',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: 'maskable-icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: 'icon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any'
+          }
+        ],
+        shortcuts: [
+          {
+            name: 'Quick Entry',
+            short_name: 'QuickEdit',
+            description: 'Open Quick Entry form instantly',
+            url: './#/',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+          }
+        ]
+      }
+    }),
+    stampServiceWorker()
+  ],
   base: './',
   server: {
     host: '0.0.0.0',

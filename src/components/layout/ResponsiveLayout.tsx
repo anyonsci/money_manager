@@ -2,7 +2,8 @@ import { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navigation } from './Navigation';
 import { useAuth } from '../../context/AuthContext';
-import { User, Wallet } from 'lucide-react';
+import { User } from 'lucide-react';
+import { PwaInstallPrompt } from '../common/PwaInstallPrompt';
 
 interface ResponsiveLayoutProps {
   children: ReactNode;
@@ -23,8 +24,8 @@ export const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
             onClick={() => navigate('/')}
             className="flex items-center gap-3 text-left focus:outline-none group"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-brand-600/20 text-brand-400 border border-brand-500/30 group-hover:border-brand-500 transition-colors">
-              <Wallet size={22} />
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 border border-brand-500/30 group-hover:border-brand-500 transition-all overflow-hidden shadow-md">
+              <img src="./icon.svg" alt="Money Manager Logo" className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-white tracking-tight leading-tight group-hover:text-brand-300 transition-colors">
@@ -64,6 +65,9 @@ export const ResponsiveLayout = ({ children }: ResponsiveLayoutProps) => {
       <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 pb-28">
         {children}
       </main>
+
+      {/* PWA Install Banner */}
+      <PwaInstallPrompt />
 
       {/* Full-width Bottom Navigation Bar */}
       {user && <Navigation />}
