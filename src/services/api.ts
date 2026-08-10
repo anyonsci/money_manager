@@ -1,7 +1,7 @@
 import { ApiResponse, Transaction, TransactionFormValues } from '../types';
 import { apiClient, getApiUrl } from './apiClient';
 
-const DEFAULT_LIMIT = 8;
+const DEFAULT_LIMIT = 200;
 
 const mockTransactions: Transaction[] = [
   {

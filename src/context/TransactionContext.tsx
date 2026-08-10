@@ -3,7 +3,7 @@ import { Transaction, TransactionFormValues } from '../types';
 import { createTransaction, deleteTransaction, fetchTransactions, updateTransaction } from '../services/api';
 import { useAuth } from './AuthContext';
 
-const DEFAULT_LIMIT = 8;
+const DEFAULT_LIMIT = 200;
 
 interface TransactionContextType {
   transactions: Transaction[];

@@ -23,12 +23,23 @@ export const formatDate = (value: string) =>
 export const getTransactionTypeLabel = (type: TransactionType) =>
   type === 'income' ? 'Income' : 'Expense';
 
-export const getCategoryIcon = (category: string) => {
-  const lower = category.toLowerCase();
-  if (lower.includes('food') || lower.includes('grocery')) return '🍽️';
-  if (lower.includes('travel') || lower.includes('transport')) return '🚗';
-  if (lower.includes('rent') || lower.includes('home')) return '🏠';
-  if (lower.includes('health')) return '🩺';
-  if (lower.includes('salary') || lower.includes('income')) return '💼';
-  return '🧾';
+const CATEGORY_ICON_MAP: Record<string, string> = {
+  need: '🛒',
+  food: '🍽️',
+  travel: '✈️',
+  entertainment: '🎬',
+  recurring: '🔄',
+  material: '📦',
+  medical: '🩺',
+  wellness: '🧘',
+  trip: '🧳',
+  maintenance: '🔧',
+  rent: '🏠',
+  investment: '📈',
+  others: '🏷️'
+};
+
+export const getCategoryIcon = (category: string): string => {
+  const key = (category || '').toLowerCase().trim();
+  return CATEGORY_ICON_MAP[key] || '🏷️';
 };
