@@ -9,6 +9,7 @@ interface WorkspaceContextType {
   activeWorkspace: Workspace | null;
   isLoadingWorkspaces: boolean;
   setActiveWorkspace: (workspace: Workspace) => void;
+  updateActiveWorkspace: (data: { name?: string; defaultCurrency?: string }) => Promise<Workspace>;
   createWorkspace: (name: string, type: 'PERSONAL' | 'SHARED', currency: string) => Promise<Workspace>;
   refreshWorkspaces: () => Promise<void>;
 }
@@ -61,6 +62,19 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setStoredActiveWorkspaceId(workspace.id);
   };
 
+  const updateActiveWorkspace = async (data: { name?: string; defaultCurrency?: string }): Promise<Workspace> => {
+    if (!activeWorkspace) throw new Error('No active workspace selected');
+
+    const res = await api.workspaces.update(activeWorkspace.id, data);
+    if (res.success && res.data) {
+      const updated = res.data;
+      setWorkspaces((prev) => prev.map((w) => (w.id === updated.id ? updated : w)));
+      setActiveWorkspaceState(updated);
+      return updated;
+    }
+    throw new Error(res.error?.message || 'Failed to update workspace');
+  };
+
   const createWorkspace = async (
     name: string,
     type: 'PERSONAL' | 'SHARED',
@@ -89,6 +103,7 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         activeWorkspace,
         isLoadingWorkspaces,
         setActiveWorkspace,
+        updateActiveWorkspace,
         createWorkspace,
         refreshWorkspaces: fetchWorkspaces,
       }}

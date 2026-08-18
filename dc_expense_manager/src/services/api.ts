@@ -44,6 +44,14 @@ export const api = {
       const response = await apiClient.get<ApiResponse<Workspace>>(`/api/workspaces/${id}`);
       return response.data;
     },
+    update: async (id: string, data: { name?: string; defaultCurrency?: string }) => {
+      const response = await apiClient.patch<ApiResponse<Workspace>>(`/api/workspaces/${id}`, data);
+      return response.data;
+    },
+    delete: async (id: string) => {
+      const response = await apiClient.delete<ApiResponse<{ id: string }>>(`/api/workspaces/${id}`);
+      return response.data;
+    },
   },
 
   // Account Groups
