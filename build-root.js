@@ -15,7 +15,7 @@ if (!fs.existsSync(distDir)) {
 }
 
 // Clean any root-level stray files that do not belong to the root portal
-const allowedRootEntries = new Set(['index.html', '404.html', 'gsheet']);
+const allowedRootEntries = new Set(['index.html', '404.html', 'gsheet', 'dc_expense_manager']);
 if (fs.existsSync(distDir)) {
   const entries = fs.readdirSync(distDir);
   for (const entry of entries) {

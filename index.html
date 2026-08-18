@@ -286,6 +286,7 @@
           <select id="defaultAppSelect" onchange="saveDefaultApp(this.value)">
             <option value="none">Always show this hub</option>
             <option value="./gsheet/">Auto-open Google Sheets (gsheet)</option>
+            <option value="./dc_expense_manager/">Auto-open DC Expense Manager (dc_expense_manager)</option>
           </select>
         </div>
       </div>
@@ -328,8 +329,8 @@
           </div>
         </article>
 
-        <!-- 2. DeriveCount Ledger App Card -->
-        <article class="app-card" style="opacity: 0.85;">
+        <!-- 2. DC Expense Manager App Card -->
+        <article class="app-card">
           <div>
             <div class="card-header">
               <div class="app-icon ledger">
@@ -338,11 +339,11 @@
                   <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
                 </svg>
               </div>
-              <span class="badge soon">Backend Ready</span>
+              <span class="badge ready">Active</span>
             </div>
             <div class="card-body">
-              <h2>DeriveCount Ledger</h2>
-              <p>Multi-commodity double-entry ledger with standalone shared workspaces, native expense splitting, and bank statement reconciliation.</p>
+              <h2>DC Expense Manager</h2>
+              <p>Double-entry personal finance tracking with automated account transpilation, subcategory tags, and multi-workspace support.</p>
             </div>
           </div>
           <div class="card-footer">
@@ -351,11 +352,14 @@
                 <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
                 <line x1="12" y1="18" x2="12.01" y2="18"></line>
               </svg>
-              PWA V5
+              Installable PWA
             </span>
-            <span class="btn-launch btn-disabled">
-              In Development
-            </span>
+            <a href="./dc_expense_manager/" class="btn-launch">
+              Launch
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </a>
           </div>
         </article>
       </main>
