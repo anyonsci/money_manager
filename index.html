@@ -3,26 +3,427 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#0f172a" />
-    <meta name="description" content="Money Manager - Personal finance tracking built with React and Apps Script" />
-    
-    <!-- PWA Links & Meta Tags -->
-    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
-    <link rel="alternate icon" href="./pwa-192x192.png" type="image/png" />
-    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
-    <link rel="manifest" href="./manifest.json" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Money Manager" />
-    <meta name="application-name" content="Money Manager" />
+    <meta name="theme-color" content="#090d16" />
+    <meta name="description" content="Money Manager Hub - Launch your personal finance Progressive Web Apps" />
+    <title>Money Manager — Apps Hub</title>
 
-    <link rel="preconnect" href="https://script.google.com" crossorigin />
-    <link rel="dns-prefetch" href="https://script.google.com" />
-    <title>Money Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --bg-main: #090d16;
+        --bg-card: #111827;
+        --bg-card-hover: #1f2937;
+        --border-color: #1e293b;
+        --border-hover: #334155;
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --accent-emerald: #10b981;
+        --accent-blue: #3b82f6;
+        --accent-amber: #f59e0b;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background-color: var(--bg-main);
+        color: var(--text-primary);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 2rem 1rem;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .container {
+        max-width: 840px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+
+      .logo-icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 1.25rem;
+        background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.3);
+      }
+
+      .logo-icon svg {
+        width: 28px;
+        height: 28px;
+        color: #ffffff;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        margin-bottom: 0.5rem;
+      }
+
+      p.subtitle {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        max-width: 480px;
+        margin: 0 auto;
+        line-height: 1.5;
+      }
+
+      .apps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+      }
+
+      .app-card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.2s ease-in-out;
+        position: relative;
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .app-card:hover {
+        background-color: var(--bg-card-hover);
+        border-color: var(--border-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+      }
+
+      .card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+
+      .app-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .app-icon.sheets {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+      }
+
+      .app-icon.ledger {
+        background-color: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+      }
+
+      .badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.65rem;
+        border-radius: 9999px;
+      }
+
+      .badge.ready {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+
+      .badge.soon {
+        background-color: rgba(245, 158, 11, 0.15);
+        color: #fbbf24;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+
+      .card-body h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+      }
+
+      .card-body p {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin-bottom: 1.5rem;
+      }
+
+      .card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .pwa-label {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .btn-launch {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background-color: #3b82f6;
+        color: #ffffff;
+        font-size: 0.875rem;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: background-color 0.15s ease;
+      }
+
+      .btn-launch:hover {
+        background-color: #2563eb;
+      }
+
+      .btn-disabled {
+        background-color: #1e293b;
+        color: #64748b;
+        cursor: not-allowed;
+      }
+
+      .preferences-section {
+        background-color: rgba(30, 41, 59, 0.4);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+      }
+
+      .pref-label {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+      }
+
+      .pref-control {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      select {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 0.4rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        outline: none;
+      }
+
+      footer {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.8125rem;
+        margin-top: 2rem;
+      }
+
+      @media (max-width: 640px) {
+        .apps-grid {
+          grid-template-columns: 1fr;
+        }
+        .preferences-section {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.75rem;
+        }
+      }
+    </style>
   </head>
-  <body class="bg-slate-950">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+  <body>
+    <div class="container">
+      <header>
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          </svg>
+        </div>
+        <h1>Money Manager Apps</h1>
+        <p class="subtitle">Select a finance workspace to launch or install as a standalone PWA application.</p>
+      </header>
+
+      <div class="preferences-section">
+        <span class="pref-label">⚡ Default Launcher Preference</span>
+        <div class="pref-control">
+          <select id="defaultAppSelect" onchange="saveDefaultApp(this.value)">
+            <option value="none">Always show this hub</option>
+            <option value="./gsheet/">Auto-open Google Sheets (gsheet)</option>
+          </select>
+        </div>
+      </div>
+
+      <main class="apps-grid">
+        <!-- 1. Google Sheets App Card -->
+        <article class="app-card">
+          <div>
+            <div class="card-header">
+              <div class="app-icon sheets">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="8" y1="13" x2="16" y2="13"></line>
+                  <line x1="8" y1="17" x2="16" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </div>
+              <span class="badge ready">Active</span>
+            </div>
+            <div class="card-body">
+              <h2>Google Sheets App</h2>
+              <p>Personal finance tracking backed by Google Sheets with fast local caching, biometric authentication, and quick transaction entry.</p>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="pwa-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+              Installable PWA
+            </span>
+            <a href="./gsheet/" class="btn-launch">
+              Launch
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </a>
+          </div>
+        </article>
+
+        <!-- 2. DeriveCount Ledger App Card -->
+        <article class="app-card" style="opacity: 0.85;">
+          <div>
+            <div class="card-header">
+              <div class="app-icon ledger">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+              </div>
+              <span class="badge soon">Backend Ready</span>
+            </div>
+            <div class="card-body">
+              <h2>DeriveCount Ledger</h2>
+              <p>Multi-commodity double-entry ledger with standalone shared workspaces, native expense splitting, and bank statement reconciliation.</p>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span class="pwa-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+              PWA V5
+            </span>
+            <span class="btn-launch btn-disabled">
+              In Development
+            </span>
+          </div>
+        </article>
+      </main>
+
+      <footer>
+        <p>Money Manager Multi-Frontend Suite &bull; Hosted on GitHub Pages</p>
+      </footer>
+    </div>
+
+    <script>
+      const STORAGE_KEY = 'mm_default_app';
+
+      // 1. Unregister legacy root-scoped Service Workers to prevent cache conflicts
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          for (const registration of registrations) {
+            // If the service worker is registered at the root rather than /gsheet/
+            if (!registration.scope.includes('/gsheet/')) {
+              registration.unregister().then((unregistered) => {
+                if (unregistered) console.log('Cleaned legacy root Service Worker:', registration.scope);
+              });
+            }
+          }
+        });
+      }
+
+      // 2. Seamless automatic forwarding for existing users & legacy bookmarks
+      function handleExistingUserMigration() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('hub')) {
+          // Explicitly requested hub view
+          return;
+        }
+
+        const savedPref = localStorage.getItem(STORAGE_KEY);
+        if (savedPref && savedPref !== 'none') {
+          window.location.replace(savedPref + window.location.hash);
+          return;
+        }
+
+        // Detect if this is an existing Google Sheets user (active auth session or hash route)
+        const hasExistingSession =
+          Boolean(localStorage.getItem('access_token')) ||
+          Boolean(localStorage.getItem('user_profile')) ||
+          Boolean(localStorage.getItem('google_id_token'));
+
+        const hasHashRoute = window.location.hash && window.location.hash.startsWith('#/');
+
+        if (hasExistingSession || hasHashRoute) {
+          const targetUrl = './gsheet/' + (window.location.hash || '#/');
+          window.location.replace(targetUrl);
+        }
+      }
+
+      function initPreferences() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        const select = document.getElementById('defaultAppSelect');
+        if (saved && select) {
+          select.value = saved;
+        }
+      }
+
+      function saveDefaultApp(value) {
+        localStorage.setItem(STORAGE_KEY, value);
+      }
+
+      handleExistingUserMigration();
+      initPreferences();
+    </script>
   </body>
 </html>

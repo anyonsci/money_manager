@@ -1,7 +1,7 @@
 {
-  "name": "Money Manager",
-  "short_name": "MoneyManager",
-  "description": "Money Manager - Personal finance tracking built with React and Apps Script",
+  "name": "Money Manager (Google Sheets)",
+  "short_name": "MM Sheets",
+  "description": "Money Manager - Personal finance tracking built with React and Google Sheets",
   "theme_color": "#0f172a",
   "background_color": "#0f172a",
   "display": "standalone",

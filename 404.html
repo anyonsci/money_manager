@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Redirecting...</title>
+    <script>
+      // Single Page App redirect script for GitHub Pages
+      // Redirects paths like /money_manager/gsheet to /money_manager/gsheet/ or /money_manager/gsheet/#/...
+      (function () {
+        var path = window.location.pathname;
+        var search = window.location.search;
+        var hash = window.location.hash;
+
+        // If path ends with /gsheet without trailing slash, redirect to /gsheet/
+        if (path.endsWith('/gsheet')) {
+          window.location.replace(path + '/' + search + hash);
+          return;
+        }
+
+        // Otherwise redirect to repo root preserving query and path info
+        var repoName = path.split('/')[1] || '';
+        var rootUrl = window.location.origin + '/' + (repoName ? repoName + '/' : '');
+        window.location.replace(rootUrl);
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Redirecting to <a href="./">Money Manager</a>...</p>
+  </body>
+</html>

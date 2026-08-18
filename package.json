@@ -1,35 +1,22 @@
 {
-  "name": "money-manager",
+  "name": "money-manager-frontends",
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "description": "Multi-frontend monorepo for Money Manager Progressive Web Apps on GitHub Pages",
+  "workspaces": [
+    "gsheet"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "deploy": "npm run build && gh-pages -d dist",
-    "generate:icons": "node generate-icons.js"
-  },
-  "dependencies": {
-    "@react-oauth/google": "^0.13.5",
-    "axios": "^1.19.0",
-    "lucide-react": "^0.468.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.21.0",
-    "recharts": "^2.14.0"
+    "dev:gsheet": "npm --prefix gsheet run dev",
+    "dev": "npm --prefix gsheet run dev",
+    "build:gsheet": "npm --prefix gsheet run build",
+    "build:root": "node build-root.js",
+    "build": "npm run build:gsheet && npm run build:root",
+    "preview": "npx serve dist",
+    "deploy": "npm run build && gh-pages -d dist"
   },
   "devDependencies": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.20",
-    "gh-pages": "^6.0.0",
-    "postcss": "^8.4.49",
-    "sharp": "^0.35.3",
-    "tailwindcss": "^3.4.16",
-    "typescript": "^5.6.3",
-    "vite": "^5.4.10",
-    "vite-plugin-pwa": "^1.3.0"
+    "gh-pages": "^6.0.0"
   }
 }

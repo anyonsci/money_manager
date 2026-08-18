@@ -9,20 +9,22 @@ function stampServiceWorker() {
     name: 'stamp-service-worker',
     enforce: 'post' as const,
     async closeBundle() {
-      // Small delay to ensure Workbox finishes writing dist/sw.js before we overwrite it with custom SW
+      // Small delay to ensure Workbox finishes writing dist/gsheet/sw.js before we overwrite it with custom SW
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       const srcSwPath = path.resolve(__dirname, 'public/sw.js');
-      const distSwPath = path.resolve(__dirname, 'dist/sw.js');
+      const distSwPath = path.resolve(__dirname, '../dist/gsheet/sw.js');
       if (fs.existsSync(srcSwPath)) {
         const buildTimestamp = `v-${Date.now()}`;
         let content = fs.readFileSync(srcSwPath, 'utf-8');
         content = content.replace(
           /const CACHE_NAME = ['"].*?['"]/,
-          `const CACHE_NAME = 'money-manager-cache-${buildTimestamp}'`
+          `const CACHE_NAME = 'money-manager-gsheet-cache-${buildTimestamp}'`
         );
-        fs.writeFileSync(distSwPath, content);
-        console.log(`[stampServiceWorker] Stamped dist/sw.js with CACHE_NAME: money-manager-cache-${buildTimestamp}`);
+        if (fs.existsSync(path.dirname(distSwPath))) {
+          fs.writeFileSync(distSwPath, content);
+          console.log(`[stampServiceWorker] Stamped dist/gsheet/sw.js with CACHE_NAME: money-manager-gsheet-cache-${buildTimestamp}`);
+        }
       }
     }
   };
@@ -34,9 +36,9 @@ export default defineConfig({
     VitePWA({
       injectRegister: null,
       manifest: {
-        name: 'Money Manager',
-        short_name: 'MoneyManager',
-        description: 'Money Manager - Personal finance tracking built with React and Apps Script',
+        name: 'Money Manager (Google Sheets)',
+        short_name: 'MM Sheets',
+        description: 'Money Manager - Personal finance tracking built with React and Google Sheets',
         theme_color: '#0f172a',
         background_color: '#0f172a',
         display: 'standalone',
@@ -88,6 +90,8 @@ export default defineConfig({
     port: 3000
   },
   build: {
+    outDir: '../dist/gsheet',
+    emptyOutDir: true,
     rollupOptions: {
       output: {
         manualChunks(id) {
