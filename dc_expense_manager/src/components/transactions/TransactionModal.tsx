@@ -202,13 +202,13 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1">
               <CreditCard size={12} className="text-brand-400" />
-              Payment Source Account
+              {type === 'expense' ? 'Payment Source Account (Money Out)' : 'Deposit Target Account (Money In)'}
             </label>
             <input
               type="text"
               value={account}
               onChange={(e) => setAccount(e.target.value)}
-              placeholder="e.g. Cash, HDFC Bank, Credit Card"
+              placeholder="e.g. Checking, HDFC, Credit Card, Cash"
               className="w-full rounded-xl border border-slate-800 bg-slate-950/80 px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:border-brand-500 focus:outline-none"
               required
             />

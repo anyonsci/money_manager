@@ -1,5 +1,5 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.js';
 import { ResponsiveLayout } from './components/layout/ResponsiveLayout.js';
 import { LoginView } from './components/auth/LoginView.js';
@@ -10,6 +10,13 @@ import { Loader2 } from 'lucide-react';
 
 export const App: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (window.location.hash === '') {
+      navigate('/');
+    }
+  }, [navigate]);
 
   if (isLoading) {
     return (

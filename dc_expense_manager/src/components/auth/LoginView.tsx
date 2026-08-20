@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext.js';
 import { Wallet, ShieldCheck, Zap, Lock, AlertCircle } from 'lucide-react';
 
 export const LoginView: React.FC = () => {
-  const { loginWithGoogle, isLoading } = useAuth();
+  const { loginWithGoogle, loginDemo, isLoading } = useAuth();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   return (
@@ -68,6 +68,20 @@ export const LoginView: React.FC = () => {
               size="large"
             />
           </div>
+
+          <div className="relative flex items-center justify-center w-full py-1">
+            <div className="border-t border-slate-800 w-full" />
+            <span className="bg-slate-900 px-3 text-[11px] font-medium text-slate-500 uppercase tracking-wider">or</span>
+            <div className="border-t border-slate-800 w-full" />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => loginDemo()}
+            className="w-full flex items-center justify-center gap-2 rounded-2xl border border-slate-700/80 bg-slate-800/80 hover:bg-slate-800 px-4 py-2.5 text-xs font-semibold text-slate-200 hover:text-white transition shadow-sm"
+          >
+            <span>Continue as Demo User</span>
+          </button>
 
           {isLoading && (
             <p className="text-xs text-brand-400 animate-pulse font-medium">

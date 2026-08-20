@@ -15,6 +15,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   loginWithGoogle: (idToken: string) => Promise<void>;
+  loginDemo: () => void;
   logout: () => Promise<void>;
 }
 
@@ -27,6 +28,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const initAuth = async () => {
     const token = getStoredAccessToken();
     if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
+    if (token === 'demo-token') {
+      const stored = getStoredUser() || {
+        id: 'demo-user-id',
+        email: 'demo@example.com',
+        name: 'Demo User',
+      };
+      setUser(stored);
       setIsLoading(false);
       return;
     }
@@ -68,6 +80,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginDemo = () => {
+    const demoUser: UserProfile = {
+      id: 'demo-user-id',
+      email: 'demo@example.com',
+      name: 'Demo User',
+      avatar: '',
+    };
+    setStoredAccessToken('demo-token');
+    setStoredUser(demoUser);
+    setUser(demoUser);
+  };
+
   const logout = async () => {
     try {
       await api.auth.logout();
@@ -86,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: Boolean(user),
         isLoading,
         loginWithGoogle,
+        loginDemo,
         logout,
       }}
     >

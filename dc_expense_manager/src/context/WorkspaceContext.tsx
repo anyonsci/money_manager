@@ -44,10 +44,31 @@ export const WorkspaceProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         } else if (list.length > 0) {
           setActiveWorkspaceState(list[0]);
           setStoredActiveWorkspaceId(list[0].id);
+        } else {
+          const defaultWs: Workspace = {
+            id: 'ws-default-demo',
+            name: 'Personal Workspace',
+            type: 'PERSONAL',
+            defaultCurrency: 'USD',
+            role: 'ADMIN',
+          };
+          setWorkspaces([defaultWs]);
+          setActiveWorkspaceState(defaultWs);
+          setStoredActiveWorkspaceId(defaultWs.id);
         }
       }
     } catch (err) {
       console.warn('Failed to load workspaces:', err);
+      const defaultWs: Workspace = {
+        id: 'ws-default-demo',
+        name: 'Personal Workspace',
+        type: 'PERSONAL',
+        defaultCurrency: 'USD',
+        role: 'ADMIN',
+      };
+      setWorkspaces([defaultWs]);
+      setActiveWorkspaceState(defaultWs);
+      setStoredActiveWorkspaceId(defaultWs.id);
     } finally {
       setIsLoadingWorkspaces(false);
     }

@@ -7,7 +7,9 @@ import {
   clearAllAuthTokens,
 } from '../utils/auth.js';
 
-const rawApiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').trim().replace(/\/$/, '');
+const DEFAULT_FALLBACK_URL = 'https://money-manager-backend-tau.vercel.app';
+
+const rawApiUrl = (import.meta.env.VITE_API_URL || DEFAULT_FALLBACK_URL).trim().replace(/\/$/, '');
 const API_BASE_URL = /^https?:\/\//i.test(rawApiUrl)
   ? rawApiUrl
   : rawApiUrl.includes('localhost') || rawApiUrl.includes('127.0.0.1')
@@ -19,7 +21,6 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
 });
 
 // Request Interceptor: Attach Bearer JWT

@@ -11,8 +11,8 @@
         var search = window.location.search;
         var hash = window.location.hash;
 
-        // If path ends with /gsheet without trailing slash, redirect to /gsheet/
-        if (path.endsWith('/gsheet')) {
+        // If path ends with /gsheet or /dc_expense_manager without trailing slash, redirect with /
+        if (path.endsWith('/gsheet') || path.endsWith('/dc_expense_manager')) {
           window.location.replace(path + '/' + search + hash);
           return;
         }
