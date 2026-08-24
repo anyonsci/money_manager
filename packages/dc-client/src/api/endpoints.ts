@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient.js';
+import { apiClient } from './client';
 import type {
   ApiResponse,
   Workspace,
@@ -6,7 +6,7 @@ import type {
   Account,
   DeriveCountTransaction,
   UserProfile,
-} from '../types/index.js';
+} from '../types/index';
 
 export const api = {
   // Authentication
@@ -62,10 +62,7 @@ export const api = {
       );
       return response.data;
     },
-    create: async (
-      workspaceId: string,
-      data: { name: string; accountType: 'ASSET' | 'LIABILITY' | 'EQUITY' | 'INCOME' | 'EXPENSE' }
-    ) => {
+    create: async (workspaceId: string, data: { name: string; accountType: string }) => {
       const response = await apiClient.post<ApiResponse<AccountGroup>>(
         `/api/workspaces/${workspaceId}/account-groups`,
         data
@@ -84,7 +81,7 @@ export const api = {
     },
     create: async (
       workspaceId: string,
-      data: { accountGroupId: string; name: string; unitSymbol: string }
+      data: { name: string; accountGroupId: string; unitSymbol: string }
     ) => {
       const response = await apiClient.post<ApiResponse<Account>>(
         `/api/workspaces/${workspaceId}/accounts`,
@@ -94,19 +91,18 @@ export const api = {
     },
   },
 
-  // Transactions
+  // Double-Entry Transactions
   transactions: {
     list: async (
       workspaceId: string,
-      params: {
+      params?: {
         page?: number;
         limit?: number;
         startDate?: string;
         endDate?: string;
-        search?: string;
         tag?: string;
-        status?: 'POSTED' | 'DRAFT' | 'VOID';
-      } = {}
+        search?: string;
+      }
     ) => {
       const response = await apiClient.get<ApiResponse<DeriveCountTransaction[]>>(
         `/api/workspaces/${workspaceId}/transactions`,
@@ -117,16 +113,14 @@ export const api = {
     create: async (
       workspaceId: string,
       data: {
-        transactionDate: string | Date;
-        postedAt?: string | Date;
+        transactionDate: string;
         description: string;
-        tags?: string[];
+        tags: string[];
+        status: 'POSTED' | 'DRAFT' | 'VOID';
         legs: Array<{
           accountId: string;
-          amount: number;
+          amount: string | number;
           unitSymbol: string;
-          exchangeRate?: number;
-          baseAmount?: number;
         }>;
       }
     ) => {
@@ -136,29 +130,15 @@ export const api = {
       );
       return response.data;
     },
-    void: async (workspaceId: string, transactionId: string) => {
+    get: async (workspaceId: string, id: string) => {
+      const response = await apiClient.get<ApiResponse<DeriveCountTransaction>>(
+        `/api/workspaces/${workspaceId}/transactions/${id}`
+      );
+      return response.data;
+    },
+    void: async (workspaceId: string, id: string) => {
       const response = await apiClient.post<ApiResponse<DeriveCountTransaction>>(
-        `/api/workspaces/${workspaceId}/transactions/${transactionId}?action=void`
-      );
-      return response.data;
-    },
-  },
-
-  // Reports
-  reports: {
-    getBalanceSheet: async (workspaceId: string) => {
-      const response = await apiClient.get<ApiResponse<any>>(
-        `/api/workspaces/${workspaceId}/reports/balance-sheet`
-      );
-      return response.data;
-    },
-    getIncomeStatement: async (
-      workspaceId: string,
-      params: { startDate?: string; endDate?: string } = {}
-    ) => {
-      const response = await apiClient.get<ApiResponse<any>>(
-        `/api/workspaces/${workspaceId}/reports/income-statement`,
-        { params }
+        `/api/workspaces/${workspaceId}/transactions/${id}/void`
       );
       return response.data;
     },

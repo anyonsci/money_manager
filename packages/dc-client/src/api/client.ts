@@ -1,23 +1,26 @@
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import {
   getStoredAccessToken,
   setStoredAccessToken,
   getStoredRefreshToken,
   setStoredRefreshToken,
   clearAllAuthTokens,
-} from '../utils/auth.js';
+} from '../auth/index';
 
 const DEFAULT_FALLBACK_URL = 'https://money-manager-backend-tau.vercel.app';
 
-const rawApiUrl = (import.meta.env.VITE_API_URL || DEFAULT_FALLBACK_URL).trim().replace(/\/$/, '');
-const API_BASE_URL = /^https?:\/\//i.test(rawApiUrl)
-  ? rawApiUrl
-  : rawApiUrl.includes('localhost') || rawApiUrl.includes('127.0.0.1')
-    ? `http://${rawApiUrl}`
-    : `https://${rawApiUrl}`;
+export const getDcApiBaseUrl = (): string => {
+  const envUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) ? String(import.meta.env.VITE_API_URL) : DEFAULT_FALLBACK_URL;
+  const rawApiUrl = (envUrl || DEFAULT_FALLBACK_URL).trim().replace(/\/$/, '');
+  return /^https?:\/\//i.test(rawApiUrl)
+    ? rawApiUrl
+    : rawApiUrl.includes('localhost') || rawApiUrl.includes('127.0.0.1')
+      ? `http://${rawApiUrl}`
+      : `https://${rawApiUrl}`;
+};
 
-export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+export const apiClient: AxiosInstance = axios.create({
+  baseURL: getDcApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -32,14 +35,14 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Response Interceptor: Handle 401 & Token Refresh
+// Response Interceptor: Handle 401 & Silent Token Refresh
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (value?: any) => void;
-  reject: (reason?: any) => void;
+  resolve: (value?: unknown) => void;
+  reject: (reason?: unknown) => void;
 }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: Error | null, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
@@ -71,12 +74,17 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       const refreshToken = getStoredRefreshToken();
+      if (!refreshToken) {
+        isRefreshing = false;
+        clearAllAuthTokens();
+        return Promise.reject(error);
+      }
 
       try {
         const refreshResponse = await axios.post(
-          `${API_BASE_URL}/api/auth/refresh`,
+          `${getDcApiBaseUrl()}/api/auth/refresh`,
           { refreshToken },
-          { withCredentials: true }
+          { headers: { 'Content-Type': 'application/json' } }
         );
 
         const newAccessToken = refreshResponse.data?.data?.token;
@@ -93,7 +101,7 @@ apiClient.interceptors.response.use(
           throw new Error('Refresh failed');
         }
       } catch (refreshErr) {
-        processQueue(refreshErr, null);
+        processQueue(refreshErr as Error, null);
         clearAllAuthTokens();
         return Promise.reject(refreshErr);
       } finally {

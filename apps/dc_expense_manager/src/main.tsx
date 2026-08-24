@@ -4,7 +4,7 @@ import { HashRouter } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { initPwaLifecycle } from '@money-manager/pwa';
 import { AuthProvider } from './context/AuthContext.js';
-import { WorkspaceProvider } from './context/WorkspaceContext.js';
+import { WorkspaceProvider } from '@money-manager/dc-client';
 import { TransactionProvider } from './context/TransactionContext.js';
 import App from './App.js';
 import './index.css';

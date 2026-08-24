@@ -32,6 +32,9 @@
       ],
       "@money-manager/pwa": [
         "../../packages/pwa/src/index.ts"
+      ],
+      "@money-manager/dc-client": [
+        "../../packages/dc-client/src/index.ts"
       ]
     }
   },

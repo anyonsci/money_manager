@@ -34,8 +34,15 @@ money_manager/
 │   │   ├── src/client.ts                # initPwaLifecycle() (Safe dev/prod SW registrar)
 │   │   └── src/vite.ts                  # createPwaPlugins() (VitePWA generator & SW cache stamper)
 │   │
-│   └── tailwind-preset/                 # 🎭 @money-manager/tailwind-preset (Shared Design Tokens & Presets)
-│       └── index.js                     # Canonical brand palette (50-950), shadows, and auto-content globs
+│   ├── tailwind-preset/                 # 🎭 @money-manager/tailwind-preset (Shared Design Tokens & Presets)
+│   │   └── index.js                     # Canonical brand palette (50-950), shadows, and auto-content globs
+│   │
+│   └── dc-client/                       # 🏦 @money-manager/dc-client (Shared DeriveCount Ledger Client & SSO)
+│       ├── src/auth/                    # Shared dcAuthStorage (SSO across all dc_* apps)
+│       ├── src/api/                     # Auto-refreshing apiClient & DeriveCount endpoints
+│       ├── src/services/                # LedgerTranspilerService (Double-entry journal engine)
+│       ├── src/adapters/                # DcLedgerStorageAdapter
+│       └── src/context/                 # WorkspaceContext, WorkspaceProvider, useWorkspace
 │
 └── apps/
     ├── gsheet/                          # 📊 Google Sheets PWA (Hosted at /gsheet/)

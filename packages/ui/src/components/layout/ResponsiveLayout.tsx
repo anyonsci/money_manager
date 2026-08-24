@@ -72,7 +72,10 @@ export const ResponsiveLayout: React.FC<ResponsiveLayoutProps> = ({
       </main>
 
       {/* PWA Install Banner */}
-      <PwaInstallPrompt />
+      <PwaInstallPrompt
+        appName={brandTitle}
+        storageKey={brandBadge ? `${brandBadge.toLowerCase()}_pwa_dismissed_until` : undefined}
+      />
 
       {/* Bottom Navigation */}
       {showNav && <Navigation />}

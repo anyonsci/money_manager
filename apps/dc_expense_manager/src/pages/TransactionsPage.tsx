@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTransactions } from '../context/TransactionContext';
-import { useWorkspace } from '../context/WorkspaceContext';
+import { useWorkspace } from '@money-manager/dc-client';
 import {
   TransactionList,
   TransactionModal,

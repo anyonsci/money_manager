@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
-import { useWorkspace } from './context/WorkspaceContext';
+import { useWorkspace } from '@money-manager/dc-client';
 import { ResponsiveLayout, PageLoader, Modal } from '@money-manager/ui';
 import { LoginView } from './components/auth/LoginView';
 import { HomePage } from './pages/HomePage';

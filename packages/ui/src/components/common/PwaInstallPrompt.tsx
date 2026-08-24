@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -6,18 +6,32 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-export const PwaInstallPrompt: React.FC = () => {
+export interface PwaInstallPromptProps {
+  appName?: string;
+  storageKey?: string;
+}
+
+export const PwaInstallPrompt: React.FC<PwaInstallPromptProps> = ({
+  appName = 'Money Manager',
+  storageKey = 'pwa_install_dismissed_until'
+}) => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showPrompt, setShowPrompt] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    const checkDismissed = () => {
+      const dismissedUntil = localStorage.getItem(storageKey);
+      if (dismissedUntil && Date.now() < parseInt(dismissedUntil, 10)) {
+        return true;
+      }
+      return false;
+    };
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      // Check if user dismissed recently
-      const dismissedUntil = localStorage.getItem('pwa_install_dismissed_until');
-      if (!dismissedUntil || Date.now() > parseInt(dismissedUntil, 10)) {
-        setShowPrompt(true);
+      if (!checkDismissed()) {
+        setDeferredPrompt(e as BeforeInstallPromptEvent);
+        setIsVisible(true);
       }
     };
 
@@ -26,58 +40,61 @@ export const PwaInstallPrompt: React.FC = () => {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  }, []);
+  }, [storageKey]);
 
-  const handleInstall = async () => {
+  const handleInstallClick = async () => {
     if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const choiceResult = await deferredPrompt.userChoice;
-    if (choiceResult.outcome === 'accepted') {
-      console.log('User accepted the PWA install prompt');
+
+    await deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+
+    if (outcome === 'accepted') {
+      setIsVisible(false);
     }
     setDeferredPrompt(null);
-    setShowPrompt(false);
   };
 
   const handleDismiss = () => {
-    setShowPrompt(false);
+    setIsVisible(false);
     // Dismiss for 7 days
-    localStorage.setItem(
-      'pwa_install_dismissed_until',
-      (Date.now() + 7 * 24 * 60 * 60 * 1000).toString()
-    );
+    const dismissUntil = Date.now() + 7 * 24 * 60 * 60 * 1000;
+    localStorage.setItem(storageKey, dismissUntil.toString());
   };
 
-  if (!showPrompt) return null;
+  if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-40 mx-auto max-w-md animate-in slide-in-from-bottom-5">
-      <div className="flex items-center justify-between gap-3 rounded-2xl border border-brand-500/30 bg-slate-900/95 p-3.5 shadow-2xl backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500/20 text-brand-400">
-            <Download size={20} />
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-white">Install Money Manager</p>
-            <p className="text-[11px] text-slate-400">Fast access from your home screen</p>
+    <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-slate-900 border border-slate-700/80 rounded-2xl p-4 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-5">
+      <div className="flex items-start gap-3">
+        <div className="p-2.5 bg-brand-500/20 text-brand-400 rounded-xl shrink-0">
+          <Download className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-semibold text-slate-100 text-sm">Install {appName}</h4>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Install to your home screen for quick offline access and faster loading.
+          </p>
+          <div className="flex items-center gap-2 mt-3">
+            <button
+              onClick={handleInstallClick}
+              className="px-3 py-1.5 bg-brand-500 hover:bg-brand-600 active:scale-95 text-white text-xs font-medium rounded-lg transition-all"
+            >
+              Install App
+            </button>
+            <button
+              onClick={handleDismiss}
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-lg transition-all"
+            >
+              Not now
+            </button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleInstall}
-            className="rounded-xl bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow hover:bg-brand-500 active:scale-95 transition"
-          >
-            Install
-          </button>
-          <button
-            type="button"
-            onClick={handleDismiss}
-            className="rounded-lg p-1 text-slate-400 hover:text-slate-200 transition"
-          >
-            <X size={16} />
-          </button>
-        </div>
+        <button
+          onClick={handleDismiss}
+          className="text-slate-400 hover:text-slate-200 p-1 -mr-1 -mt-1 rounded-lg transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );

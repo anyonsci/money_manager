@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { UserProfile } from '../types/index.js';
-import { api } from '../services/api.js';
 import {
+  api,
   getStoredAccessToken,
   setStoredAccessToken,
   setStoredRefreshToken,
   getStoredUser,
   setStoredUser,
   clearAllAuthTokens,
-} from '../utils/auth.js';
+  UserProfile
+} from '@money-manager/dc-client';
 
 interface AuthContextType {
   user: UserProfile | null;

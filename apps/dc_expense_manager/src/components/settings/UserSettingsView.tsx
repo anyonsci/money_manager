@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.js';
-import { useWorkspace } from '../../context/WorkspaceContext.js';
+import { useWorkspace } from '@money-manager/dc-client';
 import {
   LogOut,
   User,

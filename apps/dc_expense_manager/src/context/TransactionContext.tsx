@@ -4,9 +4,9 @@ import {
   TransactionFormValues,
   PaginationMeta,
 } from '@money-manager/core';
-import { useWorkspace } from './WorkspaceContext';
+import { useWorkspace, DcLedgerStorageAdapter } from '@money-manager/dc-client';
 import { useAuth } from './AuthContext';
-import { DcLedgerStorageAdapter } from '../adapters/DcLedgerStorageAdapter';
+
 
 interface SummaryData {
   totalIncome: number;
