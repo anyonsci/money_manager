@@ -17,11 +17,30 @@
     "build:dc": "npm --prefix apps/dc_expense_manager run build",
     "build:root": "node build-root.js",
     "build": "npm run build:pwa && npm run build:gsheet && npm run build:dc && npm run build:root",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:e2e": "playwright test",
+    "test:e2e:update": "playwright test --update-snapshots",
     "preview": "npx serve dist",
     "deploy": "npm run build && gh-pages -d dist"
   },
   "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/preset-env": "^8.0.2",
+    "@babel/preset-react": "^8.0.1",
+    "@babel/preset-typescript": "^8.0.1",
+    "@playwright/test": "^1.62.1",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.6",
+    "@types/jest": "^30.0.0",
     "@types/node": "^26.2.0",
-    "gh-pages": "^6.0.0"
+    "babel-plugin-transform-import-meta": "^3.0.0",
+    "gh-pages": "^6.0.0",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "ts-jest": "^29.4.12"
   }
 }

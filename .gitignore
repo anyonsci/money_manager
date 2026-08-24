@@ -5,6 +5,11 @@ node_modules/
 
 # Testing & Coverage
 coverage/
+.nyc_output/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
 
 # Production & Build Outputs (root & packages)
 dist/
