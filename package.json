@@ -5,21 +5,23 @@
   "type": "module",
   "description": "Multi-frontend monorepo for Money Manager Progressive Web Apps on GitHub Pages",
   "workspaces": [
-    "gsheet",
-    "dc_expense_manager"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
-    "dev:gsheet": "npm --prefix gsheet run dev",
-    "dev:dc": "npm --prefix dc_expense_manager run dev",
-    "dev": "npm --prefix dc_expense_manager run dev",
-    "build:gsheet": "npm --prefix gsheet run build",
-    "build:dc": "npm --prefix dc_expense_manager run build",
+    "dev:gsheet": "npm --prefix apps/gsheet run dev",
+    "dev:dc": "npm --prefix apps/dc_expense_manager run dev",
+    "dev": "npm --prefix apps/dc_expense_manager run dev",
+    "build:pwa": "npm --prefix packages/pwa run build",
+    "build:gsheet": "npm --prefix apps/gsheet run build",
+    "build:dc": "npm --prefix apps/dc_expense_manager run build",
     "build:root": "node build-root.js",
-    "build": "npm run build:gsheet && npm run build:dc && npm run build:root",
+    "build": "npm run build:pwa && npm run build:gsheet && npm run build:dc && npm run build:root",
     "preview": "npx serve dist",
     "deploy": "npm run build && gh-pages -d dist"
   },
   "devDependencies": {
+    "@types/node": "^26.2.0",
     "gh-pages": "^6.0.0"
   }
 }

@@ -1,0 +1,8 @@
+{
+  "name": "@money-manager/tailwind-preset",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "description": "Shared Tailwind CSS design tokens, color palettes, and presets for Money Manager apps"
+}
