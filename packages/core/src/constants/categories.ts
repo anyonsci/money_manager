@@ -50,3 +50,69 @@ export const getCanonicalCategory = (category: string): string => {
   const found = ALLOWED_CATEGORIES.find(cat => cat.toLowerCase() === normalized);
   return found || category;
 };
+
+export interface CategoryResolution {
+  canonicalCategory?: AllowedCategory;
+  matches: AllowedCategory[];
+  exact: boolean;
+  ambiguous: boolean;
+}
+
+/**
+ * Finds all allowed categories that start with the given prefix (case-insensitive).
+ */
+export const matchCategoriesByPrefix = (prefix: string): AllowedCategory[] => {
+  const normalized = prefix.trim().toLowerCase();
+  if (!normalized) return [];
+  return ALLOWED_CATEGORIES.filter(cat => cat.toLowerCase().startsWith(normalized));
+};
+
+/**
+ * Resolves a category string by exact match first, then by unique prefix match.
+ */
+export const resolveCategory = (categoryInput: string): CategoryResolution => {
+  const normalized = categoryInput.trim().toLowerCase();
+  if (!normalized) {
+    return { matches: [], exact: false, ambiguous: false };
+  }
+
+  // 1. Check exact match
+  const exactFound = ALLOWED_CATEGORIES.find(cat => cat.toLowerCase() === normalized);
+  if (exactFound) {
+    return {
+      canonicalCategory: exactFound,
+      matches: [exactFound],
+      exact: true,
+      ambiguous: false
+    };
+  }
+
+  // 2. Prefix match
+  const prefixMatches = ALLOWED_CATEGORIES.filter(cat =>
+    cat.toLowerCase().startsWith(normalized)
+  );
+
+  if (prefixMatches.length === 1) {
+    return {
+      canonicalCategory: prefixMatches[0],
+      matches: prefixMatches,
+      exact: false,
+      ambiguous: false
+    };
+  }
+
+  if (prefixMatches.length > 1) {
+    return {
+      matches: prefixMatches,
+      exact: false,
+      ambiguous: true
+    };
+  }
+
+  return {
+    matches: [],
+    exact: false,
+    ambiguous: false
+  };
+};
+

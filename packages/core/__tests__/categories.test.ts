@@ -3,6 +3,8 @@ import {
   CATEGORY_COLORS,
   isAllowedCategory,
   getCanonicalCategory,
+  matchCategoriesByPrefix,
+  resolveCategory,
 } from '../src/constants/categories';
 
 describe('Core Constants - Categories', () => {
@@ -77,4 +79,52 @@ describe('Core Constants - Categories', () => {
       expect(getCanonicalCategory('unknown')).toBe('unknown');
     });
   });
+
+  describe('matchCategoriesByPrefix', () => {
+    it('returns all categories matching prefix', () => {
+      expect(matchCategoriesByPrefix('f')).toEqual(['food']);
+      expect(matchCategoriesByPrefix('tra')).toEqual(['travel']);
+      expect(matchCategoriesByPrefix('tri')).toEqual(['trip']);
+      expect(matchCategoriesByPrefix('t')).toEqual(['travel', 'trip']);
+      expect(matchCategoriesByPrefix('xyz')).toEqual([]);
+    });
+  });
+
+  describe('resolveCategory', () => {
+    it('resolves exact match', () => {
+      const res = resolveCategory('food');
+      expect(res.exact).toBe(true);
+      expect(res.canonicalCategory).toBe('food');
+      expect(res.ambiguous).toBe(false);
+    });
+
+    it('resolves unique prefix match', () => {
+      const resF = resolveCategory('f');
+      expect(resF.canonicalCategory).toBe('food');
+      expect(resF.ambiguous).toBe(false);
+
+      const resSal = resolveCategory('sal');
+      expect(resSal.canonicalCategory).toBe('salary');
+      expect(resSal.ambiguous).toBe(false);
+
+      const resTra = resolveCategory('tra');
+      expect(resTra.canonicalCategory).toBe('travel');
+      expect(resTra.ambiguous).toBe(false);
+    });
+
+    it('flags ambiguous prefix match', () => {
+      const resT = resolveCategory('t');
+      expect(resT.ambiguous).toBe(true);
+      expect(resT.matches).toEqual(['travel', 'trip']);
+      expect(resT.canonicalCategory).toBeUndefined();
+    });
+
+    it('returns no match for non-existent category', () => {
+      const res = resolveCategory('xyz');
+      expect(res.exact).toBe(false);
+      expect(res.ambiguous).toBe(false);
+      expect(res.canonicalCategory).toBeUndefined();
+    });
+  });
 });
+

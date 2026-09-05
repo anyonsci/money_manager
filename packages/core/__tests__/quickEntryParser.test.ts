@@ -45,6 +45,39 @@ describe('Core Domain - Quick Entry Parser', () => {
       });
     });
 
+    it('parses valid single-space entry with a one-word account', () => {
+      const result = parseCsvTransaction('1200 Cash travel Bus ticket', '2025-02-10');
+      expect(result.valid).toBe(true);
+      expect(result.values).toEqual({
+        amount: '1200',
+        account: 'Cash',
+        category: 'travel',
+        subCategory: '',
+        note: 'Bus ticket',
+        type: 'expense',
+        date: '2025-02-10',
+      });
+    });
+
+    it('parses a single-space entry with a two-word account and subcategory', () => {
+      const result = parseCsvTransaction('1200 Cash Wallet food.groceries Weekly vegetables', '2025-02-10');
+      expect(result.valid).toBe(true);
+      expect(result.values).toEqual({
+        amount: '1200',
+        account: 'Cash Wallet',
+        category: 'food',
+        subCategory: 'groceries',
+        note: 'Weekly vegetables',
+        type: 'expense',
+        date: '2025-02-10',
+      });
+    });
+
+    it('keeps the single-space fallback limited to two account words', () => {
+      const result = parseCsvTransaction('1200 Cash Wallet Account food');
+      expect(result.valid).toBe(false);
+    });
+
     it('parses subcategory separated by a dot', () => {
       const result = parseCsvTransaction('250, ICICI, food.groceries, Weekly vegetables', '2025-03-01');
       expect(result.valid).toBe(true);
@@ -115,5 +148,53 @@ describe('Core Domain - Quick Entry Parser', () => {
       expect(result.valid).toBe(true);
       expect(result.values?.note).toBe('Movie, Popcorn, IMAX');
     });
+
+    it('resolves category via prefix matching in comma and double-space formats', () => {
+      // 'f' resolves to 'food'
+      const resF = parseCsvTransaction('30, HDFC, f, Lunch');
+      expect(resF.valid).toBe(true);
+      expect(resF.values?.category).toBe('food');
+
+      // 'sal' resolves to 'salary' and income
+      const resSal = parseCsvTransaction('5000  Checking  sal  Monthly salary');
+      expect(resSal.valid).toBe(true);
+      expect(resSal.values?.category).toBe('salary');
+      expect(resSal.values?.type).toBe('income');
+
+      // 'tra' resolves to 'travel', 'tri' resolves to 'trip'
+      const resTra = parseCsvTransaction('150  Card  tra  Flight');
+      expect(resTra.valid).toBe(true);
+      expect(resTra.values?.category).toBe('travel');
+
+      const resTri = parseCsvTransaction('80  Cash  tri  Weekend trip');
+      expect(resTri.valid).toBe(true);
+      expect(resTri.values?.category).toBe('trip');
+
+      // Prefix with subcategory e.g. f.fruits
+      const resSub = parseCsvTransaction('25  Cash  f.fruits  Apples');
+      expect(resSub.valid).toBe(true);
+      expect(resSub.values?.category).toBe('food');
+      expect(resSub.values?.subCategory).toBe('fruits');
+    });
+
+    it('resolves category via prefix matching in single-space format', () => {
+      const resSingle = parseCsvTransaction('40 HDFC f Lunch note');
+      expect(resSingle.valid).toBe(true);
+      expect(resSingle.values?.category).toBe('food');
+      expect(resSingle.values?.account).toBe('HDFC');
+      expect(resSingle.values?.note).toBe('Lunch note');
+
+      const resTwoWord = parseCsvTransaction('60 diners cc tra Train ticket');
+      expect(resTwoWord.valid).toBe(true);
+      expect(resTwoWord.values?.category).toBe('travel');
+      expect(resTwoWord.values?.account).toBe('diners cc');
+    });
+
+    it('returns informative error for ambiguous category prefixes', () => {
+      const resAmbiguous = parseCsvTransaction('30  HDFC  t  Some note');
+      expect(resAmbiguous.valid).toBe(false);
+      expect(resAmbiguous.error).toContain('Category prefix "t" matches multiple: travel, trip');
+    });
   });
 });
+

@@ -1,6 +1,13 @@
 import { TransactionFormValues } from '../types/index';
-import { ALLOWED_CATEGORIES, isAllowedCategory, getCanonicalCategory } from '../constants/categories';
+import { ALLOWED_CATEGORIES, resolveCategory } from '../constants/categories';
 import { formatInputDate } from '../formatters/index';
+import {
+  CommaQuickEntryParser,
+  DoubleSpaceQuickEntryParser,
+  QuickEntryParts,
+  QuickEntryParser,
+  SingleSpaceQuickEntryParser
+} from './quickEntryParsers';
 
 export interface ParsedQuickEntryResult {
   valid: boolean;
@@ -8,31 +15,18 @@ export interface ParsedQuickEntryResult {
   error?: string;
 }
 
-export const parseCsvTransaction = (input: string, defaultDate?: string): ParsedQuickEntryResult => {
-  const trimmed = input.trim();
-  if (!trimmed) {
-    return {
-      valid: false,
-      error: 'Enter entry as: amount  account  category [. subcategory]  [note] (or with commas)'
-    };
-  }
+const quickEntryParsers: QuickEntryParser[] = [
+  new CommaQuickEntryParser(),
+  new DoubleSpaceQuickEntryParser(),
+  new SingleSpaceQuickEntryParser()
+];
 
-  const parts = trimmed
-    .split(/,|\s{2,}/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-
-  if (parts.length < 3) {
-    return {
-      valid: false,
-      error: 'Requires at least 3 parts (separated by commas or 2+ spaces): amount, account, category'
-    };
-  }
-
-  const rawAmountStr = parts[0];
-  const rawAccount = parts[1];
-  const rawCategoryPart = parts[2];
-  const note = parts.slice(3).join(', ').trim();
+const buildTransaction = (parts: QuickEntryParts, defaultDate?: string): ParsedQuickEntryResult => {
+  const rawAmountStr = parts.amount;
+  const rawAccount = parts.account;
+  const rawCategoryPart = parts.category;
+  const delimiter = parts.noteDelimiter ?? ', ';
+  const note = parts.noteParts.join(delimiter).trim();
 
   const isPositive = rawAmountStr.startsWith('+');
   const isExplicitNegative = rawAmountStr.startsWith('-');
@@ -66,14 +60,22 @@ export const parseCsvTransaction = (input: string, defaultDate?: string): Parsed
     return { valid: false, error: 'Category name cannot be empty.' };
   }
 
-  if (!isAllowedCategory(category)) {
+  const resolution = resolveCategory(category);
+  if (resolution.ambiguous) {
+    return {
+      valid: false,
+      error: `Category prefix "${category}" matches multiple: ${resolution.matches.join(', ')}. Please type more characters.`
+    };
+  }
+
+  if (!resolution.canonicalCategory) {
     return {
       valid: false,
       error: `Category "${category}" is invalid. Allowed categories: ${ALLOWED_CATEGORIES.join(', ')}`
     };
   }
 
-  category = getCanonicalCategory(category);
+  category = resolution.canonicalCategory;
 
   let type: 'expense' | 'income' = 'expense';
   const catLower = category.toLowerCase();
@@ -82,8 +84,6 @@ export const parseCsvTransaction = (input: string, defaultDate?: string): Parsed
   } else if (isExplicitNegative) {
     type = 'expense';
   }
-
-  const date = defaultDate || formatInputDate();
 
   return {
     valid: true,
@@ -94,7 +94,29 @@ export const parseCsvTransaction = (input: string, defaultDate?: string): Parsed
       subCategory,
       note,
       type,
-      date
+      date: defaultDate || formatInputDate()
     }
+  };
+};
+
+export const parseCsvTransaction = (input: string, defaultDate?: string): ParsedQuickEntryResult => {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return {
+      valid: false,
+      error: 'Enter entry as: amount  account  category [. subcategory]  [note] (or with commas)'
+    };
+  }
+
+  for (const parser of quickEntryParsers) {
+    const parts = parser.parse(trimmed);
+    if (parts) {
+      return buildTransaction(parts, defaultDate);
+    }
+  }
+
+  return {
+    valid: false,
+    error: 'Requires at least 3 parts (separated by commas or 2+ spaces): amount, account, category'
   };
 };

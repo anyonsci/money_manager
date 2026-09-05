@@ -13,5 +13,6 @@ describe('UI Index Exports', () => {
     expect(UIExports.TransactionList).toBeDefined();
     expect(UIExports.TransactionModal).toBeDefined();
     expect(UIExports.Pagination).toBeDefined();
+    expect(UIExports.QuickEntryView).toBeDefined();
   });
 });

@@ -9,3 +9,4 @@ export * from './components/transactions/Pagination';
 export * from './components/transactions/TransactionCard';
 export * from './components/transactions/TransactionList';
 export * from './components/transactions/TransactionModal';
+export * from './components/transactions/QuickEntryView';
