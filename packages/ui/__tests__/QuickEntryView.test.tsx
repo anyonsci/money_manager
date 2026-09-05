@@ -70,13 +70,53 @@ describe('UI Component - QuickEntryView', () => {
 
     fireEvent.change(input, { target: { value: 'invalid_data' } });
 
-    const errorAlert = screen.getByText(/Requires at least 3 parts/i);
+    const errorAlert = screen.getByText(/Invalid amount/i);
     expect(errorAlert).toBeInTheDocument();
 
     const alertBox = errorAlert.closest('.bg-amber-950\\/50') || errorAlert.parentElement;
     expect(alertBox).not.toBeNull();
     const position = alertBox!.compareDocumentPosition(input);
     expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('displays progressive partial preview without error alert when typing initial amount and account', () => {
+    render(<QuickEntryView currency="USD" onSubmit={mockOnSubmit} />);
+    const input = screen.getByPlaceholderText(/30\s+HDFC\s+Groceries/i);
+
+    // 1. User types only amount: "30"
+    fireEvent.change(input, { target: { value: '30' } });
+
+    // Should show $30.00 and next field hint without any error box
+    expect(screen.getByText('$30.00')).toBeInTheDocument();
+    expect(screen.getByText(/Select or type Account/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Invalid/i)).not.toBeInTheDocument();
+
+    // 2. User types amount and account: "30  HDFC"
+    fireEvent.change(input, { target: { value: '30  HDFC' } });
+
+    expect(screen.getByText('$30.00')).toBeInTheDocument();
+    expect(screen.getAllByText('HDFC').length).toBeGreaterThan(0);
+    expect(screen.getByText(/Select or type Category/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Invalid/i)).not.toBeInTheDocument();
+
+    // 3. User types invalid category: "30  HDFC  invalidcategory"
+    fireEvent.change(input, { target: { value: '30  HDFC  invalidcategory' } });
+    expect(screen.getByText(/Category "invalidcategory" is invalid/i)).toBeInTheDocument();
+  });
+
+  it('supports prefix-matched category and subcategory in live preview', () => {
+    render(<QuickEntryView currency="USD" onSubmit={mockOnSubmit} />);
+    const input = screen.getByPlaceholderText(/30\s+HDFC\s+Groceries/i);
+
+    // Prefix "trav" should match "travel" and show complete preview
+    fireEvent.change(input, { target: { value: '60  Checking  trav.flight  Flight ticket' } });
+
+    expect(screen.getByText('$60.00')).toBeInTheDocument();
+    expect(screen.getByText('Checking')).toBeInTheDocument();
+    expect(screen.getByText('travel')).toBeInTheDocument();
+    expect(screen.getByText('flight')).toBeInTheDocument();
+    expect(screen.getByText(/"Flight ticket"/i)).toBeInTheDocument();
+    expect(screen.getByText('Ready to save ↵')).toBeInTheDocument();
   });
 
   it('submits valid entry, triggers onSubmit, shows success confirmation ABOVE input, and resets input', async () => {

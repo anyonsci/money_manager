@@ -13,6 +13,10 @@ describe('Core Index Exports', () => {
     expect(CoreExports.getTransactionTypeLabel).toBeDefined();
     expect(CoreExports.getCategoryIcon).toBeDefined();
     expect(CoreExports.parseCsvTransaction).toBeDefined();
+    expect(CoreExports.parseQuickEntry).toBeDefined();
+    expect(CoreExports.CommaQuickEntryParser).toBeDefined();
+    expect(CoreExports.DoubleSpaceQuickEntryParser).toBeDefined();
+    expect(CoreExports.SingleSpaceQuickEntryParser).toBeDefined();
     expect(CoreExports.createAuthStorage).toBeDefined();
     expect(CoreExports.parseJwt).toBeDefined();
     expect(CoreExports.isTokenExpired).toBeDefined();

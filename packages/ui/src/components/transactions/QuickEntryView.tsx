@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
-  parseCsvTransaction,
+  parseQuickEntry,
+  type QuickEntryProgressResult,
   formatCurrency,
   detectQuickEntryField,
   applyQuickEntryCompletion,
@@ -114,9 +115,8 @@ export const QuickEntryView: React.FC<QuickEntryViewProps> = ({
     setActiveSuggestionIndex(-1);
   }, [filteredSuggestions]);
 
-  const parsed = useMemo(() => {
-    if (!input.trim()) return null;
-    return parseCsvTransaction(input);
+  const progress: QuickEntryProgressResult = useMemo(() => {
+    return parseQuickEntry(input);
   }, [input]);
 
   const handleSelectSuggestion = (suggestion: string) => {
@@ -138,11 +138,10 @@ export const QuickEntryView: React.FC<QuickEntryViewProps> = ({
     if (e) e.preventDefault();
     if (saving || isSubmitting) return;
 
-    const result = parseCsvTransaction(input);
-    if (!result.valid || !result.values) {
+    if (!progress.valid || !progress.values) {
       setStatus({
         type: 'error',
-        message: result.error || 'Please fill in a valid entry format.',
+        message: progress.error || progress.hint || 'Please fill in a valid entry format.',
       });
       return;
     }
@@ -151,10 +150,10 @@ export const QuickEntryView: React.FC<QuickEntryViewProps> = ({
     setStatus({ type: 'idle', message: '' });
 
     try {
-      await onSubmit(result.values);
-      const desc = `${formatCurrency(Number(result.values.amount), currency)} (${result.values.category}${
-        result.values.subCategory ? ` . ${result.values.subCategory}` : ''
-      }) paid via ${result.values.account}`;
+      await onSubmit(progress.values);
+      const desc = `${formatCurrency(Number(progress.values.amount), currency)} (${progress.values.category}${
+        progress.values.subCategory ? ` . ${progress.values.subCategory}` : ''
+      }) paid via ${progress.values.account}`;
       setLastSavedSummary(desc);
       setStatus({
         type: 'success',
@@ -219,54 +218,106 @@ export const QuickEntryView: React.FC<QuickEntryViewProps> = ({
 
         {/* Live Parsed Preview or Parse Error (Above the input!) */}
         <div className="mb-3 w-full min-h-[48px] transition-all">
-          {parsed && !parsed.valid && (
+          {progress.stage === 'error' && (
             <div className="flex items-center gap-2.5 text-amber-300 bg-amber-950/50 border border-amber-800/60 rounded-2xl px-3.5 py-2.5 shadow-md animate-in fade-in duration-150 text-xs">
               <AlertCircle size={16} className="shrink-0 text-amber-400" />
-              <span className="font-medium">{parsed.error}</span>
+              <span className="font-medium">{progress.error}</span>
             </div>
           )}
 
-          {parsed && parsed.valid && parsed.values && (
+          {progress.valid && progress.values && (
             <div className="flex items-center justify-between bg-slate-900/95 border border-slate-800/90 rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-xl animate-in fade-in duration-150 backdrop-blur-sm">
               <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300 min-w-0">
                 <span className="font-bold text-emerald-400 text-sm">
-                  {formatCurrency(Number(parsed.values.amount), currency)}
+                  {formatCurrency(Number(progress.values.amount), currency)}
                 </span>
                 <span
                   className={`px-1.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider ${
-                    parsed.values.type === 'income'
+                    progress.values.type === 'income'
                       ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                       : 'bg-slate-800 text-slate-300 border border-slate-700'
                   }`}
                 >
-                  {parsed.values.type}
+                  {progress.values.type}
                 </span>
                 <span className="text-slate-600">•</span>
                 <span className="text-slate-400">
-                  Account: <strong className="text-slate-100">{parsed.values.account}</strong>
+                  Account: <strong className="text-slate-100">{progress.values.account}</strong>
                 </span>
                 <span className="text-slate-600">•</span>
                 <span className="text-slate-400">
-                  Category: <strong className="text-slate-100">{parsed.values.category}</strong>
+                  Category: <strong className="text-slate-100">{progress.values.category}</strong>
                 </span>
-                {parsed.values.subCategory && (
+                {progress.values.subCategory && (
                   <>
                     <span className="text-slate-600">•</span>
                     <span className="text-slate-400">
-                      Subcategory: <strong className="text-slate-100">{parsed.values.subCategory}</strong>
+                      Subcategory: <strong className="text-slate-100">{progress.values.subCategory}</strong>
                     </span>
                   </>
                 )}
-                {parsed.values.note && (
+                {progress.values.note && (
                   <>
                     <span className="text-slate-600">•</span>
-                    <span className="italic text-slate-300">"{parsed.values.note}"</span>
+                    <span className="italic text-slate-300">"{progress.values.note}"</span>
                   </>
                 )}
               </div>
               <span className="hidden md:inline-flex shrink-0 text-[11px] text-brand-400 font-semibold px-2 py-0.5 rounded-full bg-brand-500/10 border border-brand-500/20 ml-2">
                 Ready to save ↵
               </span>
+            </div>
+          )}
+
+          {!progress.valid && progress.stage !== 'error' && progress.stage !== 'empty' && progress.partial && (
+            <div className="flex items-center justify-between bg-slate-900/80 border border-slate-800/80 rounded-2xl px-3.5 py-2.5 sm:px-4 sm:py-3 shadow-lg animate-in fade-in duration-150 backdrop-blur-sm">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300 min-w-0">
+                {progress.partial.amount && (
+                  <>
+                    <span className="font-bold text-emerald-400 text-sm">
+                      {formatCurrency(Number(progress.partial.amount), currency)}
+                    </span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-md text-[10px] font-semibold uppercase tracking-wider ${
+                        progress.partial.type === 'income'
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                          : 'bg-slate-800 text-slate-300 border border-slate-700'
+                      }`}
+                    >
+                      {progress.partial.type}
+                    </span>
+                  </>
+                )}
+                {progress.partial.account && (
+                  <>
+                    <span className="text-slate-600">•</span>
+                    <span className="text-slate-400">
+                      Account: <strong className="text-slate-100">{progress.partial.account}</strong>
+                    </span>
+                  </>
+                )}
+                {progress.partial.category && (
+                  <>
+                    <span className="text-slate-600">•</span>
+                    <span className="text-slate-400">
+                      Category: <strong className="text-slate-100">{progress.partial.category}</strong>
+                    </span>
+                  </>
+                )}
+                {progress.partial.subCategory && (
+                  <>
+                    <span className="text-slate-600">•</span>
+                    <span className="text-slate-400">
+                      Subcategory: <strong className="text-slate-100">{progress.partial.subCategory}</strong>
+                    </span>
+                  </>
+                )}
+              </div>
+              {progress.hint && (
+                <span className="shrink-0 text-[11px] text-amber-400/90 font-medium px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 ml-2">
+                  {progress.hint}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -389,7 +440,7 @@ export const QuickEntryView: React.FC<QuickEntryViewProps> = ({
 
           <button
             type="submit"
-            disabled={busy || !input.trim() || (parsed !== null && !parsed.valid)}
+            disabled={busy || !progress.valid}
             className="absolute inset-y-2 right-2 px-4 flex items-center justify-center bg-brand-600 hover:bg-brand-500 disabled:opacity-40 disabled:hover:bg-brand-600 text-white rounded-2xl transition-all duration-150 active:scale-95 shadow-md"
             title="Save Transaction (Enter)"
           >

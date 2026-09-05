@@ -130,5 +130,47 @@ describe('quickEntryFieldDetector', () => {
       const nextState = detectQuickEntryField(newInput);
       expect(nextState.field).toBe('note');
     });
+
+    test('gracefully skips auto-fill (field: none) when parser does not implement detectField', () => {
+      const dummyParser = {
+        name: 'custom-dummy',
+        canParse: () => true,
+        parse: () => undefined,
+      };
+
+      const state = detectQuickEntryField('custom entry syntax', 5, [dummyParser]);
+      expect(state.field).toBe('none');
+      expect(state.query).toBe('');
+    });
+
+    test('falls back to default completion formatting when parsers lack applyCompletion', () => {
+      const dummyParser = {
+        name: 'custom-dummy',
+        canParse: () => true,
+        parse: () => undefined,
+      };
+
+      // Space delimiter fallback
+      const stateSpace = {
+        field: 'account' as const,
+        query: 'HD',
+        tokenIndex: 1,
+        delimiter: ' ' as const,
+        replaceRange: { start: 4, end: 6 },
+      };
+      const res1 = applyQuickEntryCompletion('30  HD', 'HDFC', stateSpace, [dummyParser]);
+      expect(res1.newInput).toBe('30  HDFC  ');
+
+      // Comma delimiter fallback
+      const stateComma = {
+        field: 'account' as const,
+        query: 'HD',
+        tokenIndex: 1,
+        delimiter: ',' as const,
+        replaceRange: { start: 4, end: 6 },
+      };
+      const res2 = applyQuickEntryCompletion('30, HD', 'HDFC', stateComma, [dummyParser]);
+      expect(res2.newInput).toBe('30, HDFC, ');
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { parseCsvTransaction } from '../src/domain/quickEntryParser';
+import { parseCsvTransaction, parseQuickEntry } from '../src/domain/quickEntryParser';
 
 describe('Core Domain - Quick Entry Parser', () => {
   describe('parseCsvTransaction', () => {
@@ -194,6 +194,87 @@ describe('Core Domain - Quick Entry Parser', () => {
       const resAmbiguous = parseCsvTransaction('30  HDFC  t  Some note');
       expect(resAmbiguous.valid).toBe(false);
       expect(resAmbiguous.error).toContain('Category prefix "t" matches multiple: travel, trip');
+    });
+  });
+
+  describe('parseQuickEntry', () => {
+    it('returns empty stage for empty input', () => {
+      const res = parseQuickEntry('');
+      expect(res.valid).toBe(false);
+      expect(res.stage).toBe('empty');
+      expect(res.hint).toContain('Type amount');
+      expect(res.error).toBeUndefined();
+    });
+
+    it('returns amount stage when only amount is typed', () => {
+      const res = parseQuickEntry('50');
+      expect(res.valid).toBe(false);
+      expect(res.stage).toBe('amount');
+      expect(res.partial.amount).toBe('50');
+      expect(res.partial.type).toBe('expense');
+      expect(res.hint).toContain('Account');
+      expect(res.error).toBeUndefined();
+
+      const resIncome = parseQuickEntry('+2000');
+      expect(resIncome.valid).toBe(false);
+      expect(resIncome.stage).toBe('amount');
+      expect(resIncome.partial.amount).toBe('2000');
+      expect(resIncome.partial.type).toBe('income');
+    });
+
+    it('returns account stage when amount and account are typed', () => {
+      const resDouble = parseQuickEntry('50  HDFC');
+      expect(resDouble.valid).toBe(false);
+      expect(resDouble.stage).toBe('account');
+      expect(resDouble.partial.amount).toBe('50');
+      expect(resDouble.partial.account).toBe('HDFC');
+      expect(resDouble.hint).toContain('Category');
+      expect(resDouble.error).toBeUndefined();
+
+      const resComma = parseQuickEntry('50, HDFC');
+      expect(resComma.valid).toBe(false);
+      expect(resComma.stage).toBe('account');
+      expect(resComma.partial.account).toBe('HDFC');
+    });
+
+    it('returns complete stage when valid category prefix is typed', () => {
+      const res = parseQuickEntry('30  HDFC  f', '2025-01-15');
+      expect(res.valid).toBe(true);
+      expect(res.stage).toBe('complete');
+      expect(res.values?.amount).toBe('30');
+      expect(res.values?.account).toBe('HDFC');
+      expect(res.values?.category).toBe('food');
+      expect(res.hint).toBe('Ready to save ↵');
+    });
+
+    it('returns complete stage with subcategory and note', () => {
+      const res = parseQuickEntry('45  ICICI  food.lunch  Office meal', '2025-01-15');
+      expect(res.valid).toBe(true);
+      expect(res.stage).toBe('complete');
+      expect(res.values?.category).toBe('food');
+      expect(res.values?.subCategory).toBe('lunch');
+      expect(res.values?.note).toBe('Office meal');
+    });
+
+    it('returns category stage with guidance for ambiguous category prefixes', () => {
+      const res = parseQuickEntry('30  HDFC  t');
+      expect(res.valid).toBe(false);
+      expect(res.stage).toBe('category');
+      expect(res.hint).toContain('matches multiple: travel, trip');
+    });
+
+    it('returns error stage for invalid amount', () => {
+      const res = parseQuickEntry('invalidAmount  HDFC  food');
+      expect(res.valid).toBe(false);
+      expect(res.stage).toBe('error');
+      expect(res.error).toContain('Invalid amount');
+    });
+
+    it('returns error stage for invalid category', () => {
+      const res = parseQuickEntry('30  HDFC  xyz');
+      expect(res.valid).toBe(false);
+      expect(res.stage).toBe('error');
+      expect(res.error).toContain('is invalid. Allowed categories');
     });
   });
 });

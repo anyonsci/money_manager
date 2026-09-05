@@ -40,7 +40,6 @@
     "babel-plugin-transform-import-meta": "^3.0.0",
     "gh-pages": "^6.0.0",
     "jest": "^30.4.2",
-    "jest-environment-jsdom": "^30.4.1",
-    "ts-jest": "^29.4.12"
+    "jest-environment-jsdom": "^30.4.1"
   }
 }
