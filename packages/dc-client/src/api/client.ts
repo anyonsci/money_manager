@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import { supabase } from '@money-manager/core';
 import {
   getStoredAccessToken,
   setStoredAccessToken,
@@ -10,8 +11,11 @@ import {
 const DEFAULT_FALLBACK_URL = 'https://money-manager-backend-tau.vercel.app';
 
 export const getDcApiBaseUrl = (): string => {
-  const envUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) ? String(import.meta.env.VITE_API_URL) : DEFAULT_FALLBACK_URL;
-  const rawApiUrl = (envUrl || DEFAULT_FALLBACK_URL).trim().replace(/\/$/, '');
+  const envUrl =
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL) ||
+    (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) ||
+    DEFAULT_FALLBACK_URL;
+  const rawApiUrl = (String(envUrl) || DEFAULT_FALLBACK_URL).trim().replace(/\/$/, '');
   return /^https?:\/\//i.test(rawApiUrl)
     ? rawApiUrl
     : rawApiUrl.includes('localhost') || rawApiUrl.includes('127.0.0.1')
@@ -26,9 +30,20 @@ export const apiClient: AxiosInstance = axios.create({
   },
 });
 
-// Request Interceptor: Attach Bearer JWT
-apiClient.interceptors.request.use((config) => {
-  const token = getStoredAccessToken();
+// Request Interceptor: Attach Supabase Bearer JWT
+apiClient.interceptors.request.use(async (config) => {
+  let token: string | null = null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    token = data.session?.access_token || null;
+  } catch {
+    // In mock/test environment
+  }
+
+  if (!token) {
+    token = getStoredAccessToken();
+  }
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -73,6 +88,22 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
+      // 1. Primary: Attempt Supabase session refresh
+      try {
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        const newAccessToken = refreshData?.session?.access_token;
+        if (!refreshError && newAccessToken) {
+          apiClient.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
+          processQueue(null, newAccessToken);
+          isRefreshing = false;
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return apiClient(originalRequest);
+        }
+      } catch {
+        // Continue to fallback below
+      }
+
+      // 2. Fallback: Legacy refresh token flow for tests and backward compatibility
       const refreshToken = getStoredRefreshToken();
       if (!refreshToken) {
         isRefreshing = false;

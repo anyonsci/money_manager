@@ -1,4 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { supabase } from '@money-manager/core';
 import {
   clearAllAuthTokens,
   getStoredAccessToken,
@@ -38,8 +39,19 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 // Request Interceptor: Inject accessToken payload into body without attaching custom Authorization headers.
 // Custom headers (like Authorization) cause browsers to send an OPTIONS preflight request, which Google Apps Script rejects with a CORS error.
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = getStoredAccessToken();
+  async (config: InternalAxiosRequestConfig) => {
+    let token: string | null = null;
+    try {
+      const { data } = await supabase.auth.getSession();
+      token = data.session?.access_token || null;
+    } catch {
+      // Supabase not initialized or running in test
+    }
+
+    if (!token) {
+      token = getStoredAccessToken();
+    }
+
     if (token) {
       // Inject accessToken into JSON payload body for Google Apps Script Web App
       if (config.data) {
@@ -89,6 +101,30 @@ async function handleUnauthorizedResponse(originalRequest: InternalAxiosRequestC
   originalRequest._retry = true;
   isRefreshing = true;
 
+  // 1. Primary: Attempt Supabase session refresh
+  try {
+    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+    const newAccessToken = refreshData?.session?.access_token;
+    if (!refreshError && newAccessToken) {
+      if (originalRequest.data) {
+        try {
+          const dataObj = typeof originalRequest.data === 'string' ? JSON.parse(originalRequest.data) : originalRequest.data;
+          if (typeof dataObj === 'object' && dataObj !== null) {
+            dataObj.accessToken = newAccessToken;
+            originalRequest.data = JSON.stringify(dataObj);
+          }
+        } catch {}
+      }
+
+      processQueue(null, newAccessToken);
+      isRefreshing = false;
+      return apiClient(originalRequest);
+    }
+  } catch {
+    // Continue to fallback below
+  }
+
+  // 2. Fallback: Legacy refresh token flow for backward compatibility
   const refreshToken = getStoredRefreshToken();
   const user = getStoredUser();
 

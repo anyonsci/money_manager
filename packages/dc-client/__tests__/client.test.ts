@@ -49,7 +49,7 @@ describe('DC Client - API Client', () => {
       const requestInterceptor = (apiClient.interceptors.request as any).handlers?.[0]?.fulfilled;
       if (requestInterceptor) {
         const config = { headers: {} as Record<string, string> };
-        const result = requestInterceptor(config);
+        const result = await requestInterceptor(config);
         expect(result.headers.Authorization).toBe('Bearer jwt-token-xyz');
       } else {
         // Fallback: verify function works

@@ -9,3 +9,4 @@ export * from './domain/quickEntryParser';
 export * from './domain/quickEntryFieldDetector';
 export * from './adapters/StorageAdapter';
 export * from './utils/auth';
+export * from './supabase';

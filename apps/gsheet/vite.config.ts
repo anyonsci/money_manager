@@ -29,7 +29,7 @@ export default defineConfig({
             if (id.includes('react/') || id.includes('react-dom') || id.includes('react-router-dom')) {
               return 'vendor-react';
             }
-            if (id.includes('@react-oauth/google')) {
+            if (id.includes('@supabase/supabase-js')) {
               return 'vendor-auth';
             }
             if (id.includes('lucide-react')) {
