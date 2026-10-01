@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTransactions } from '../context/TransactionContext';
 import {
   AnalyticsSummary,
@@ -6,8 +6,14 @@ import {
 } from '@money-manager/ui';
 
 export const AnalyticsPage: React.FC = () => {
-  const { transactions } = useTransactions();
+  const { transactions, loading, hasLoadedInitially, loadTransactions } = useTransactions();
   const [dateFilter, setDateFilter] = useState<'month' | 'year' | 'all'>('month');
+
+  useEffect(() => {
+    if (!hasLoadedInitially && !loading) {
+      loadTransactions(1);
+    }
+  }, [hasLoadedInitially, loading, loadTransactions]);
 
   const filteredTransactions = useMemo(() => {
     if (dateFilter === 'all') return transactions;

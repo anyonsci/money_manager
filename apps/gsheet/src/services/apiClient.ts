@@ -40,16 +40,16 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 // Custom headers (like Authorization) cause browsers to send an OPTIONS preflight request, which Google Apps Script rejects with a CORS error.
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    let token: string | null = null;
-    try {
-      const { data } = await supabase.auth.getSession();
-      token = data.session?.access_token || null;
-    } catch {
-      // Supabase not initialized or running in test
-    }
+    // 1. Fast path: Check synchronous local storage first (zero async overhead)
+    let token: string | null = getStoredAccessToken();
 
     if (!token) {
-      token = getStoredAccessToken();
+      try {
+        const { data } = await supabase.auth.getSession();
+        token = data.session?.access_token || null;
+      } catch {
+        // Supabase not initialized or running in test
+      }
     }
 
     if (token) {

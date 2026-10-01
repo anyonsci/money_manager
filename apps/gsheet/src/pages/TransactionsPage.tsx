@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTransactions } from '../context/TransactionContext';
 import {
   TransactionList,
@@ -16,6 +16,7 @@ export const TransactionsPage: React.FC = () => {
   const {
     transactions,
     loading,
+    hasLoadedInitially,
     page,
     totalPages,
     loadTransactions,
@@ -23,6 +24,12 @@ export const TransactionsPage: React.FC = () => {
     updateTransactionItem,
     deleteTransactionItem,
   } = useTransactions();
+
+  useEffect(() => {
+    if (!hasLoadedInitially && !loading) {
+      loadTransactions(1);
+    }
+  }, [hasLoadedInitially, loading, loadTransactions]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTx, setSelectedTx] = useState<UnifiedTransaction | null>(null);

@@ -5,22 +5,22 @@ export const DEFAULT_SUPABASE_URL = 'https://cmbjedfxyrrytsafymmm.supabase.co';
 export const DEFAULT_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_6VPhNR8k-QeDrxK84BKNpA_HdNUo8q2';
 
 export const getSupabaseUrl = (): string => {
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) {
-    return String(import.meta.env.VITE_SUPABASE_URL);
+  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_URL) {
+    return String((import.meta as any).env.VITE_SUPABASE_URL);
   }
   return DEFAULT_SUPABASE_URL;
 };
 
 export const getSupabasePublishableKey = (): string => {
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY) {
-    return String(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_KEY) {
+    return String((import.meta as any).env.VITE_SUPABASE_PUBLISHABLE_KEY);
   }
   return DEFAULT_SUPABASE_PUBLISHABLE_KEY;
 };
 
 export const getSupabaseRedirectUrl = (): string => {
-  if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_REDIRECT_URL) {
-    return String(import.meta.env.VITE_SUPABASE_REDIRECT_URL);
+  if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_SUPABASE_REDIRECT_URL) {
+    return String((import.meta as any).env.VITE_SUPABASE_REDIRECT_URL);
   }
   if (typeof window !== 'undefined' && window.location) {
     return window.location.origin + window.location.pathname;

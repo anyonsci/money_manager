@@ -48,7 +48,11 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   useEffect(() => {
     if (accessToken && !hasLoadedInitially) {
-      loadTransactions(1);
+      const hash = typeof window !== 'undefined' ? window.location.hash : '';
+      const isHome = !hash || hash === '#/' || hash === '#' || hash === '';
+      if (!isHome) {
+        loadTransactions(1);
+      }
     }
   }, [accessToken, hasLoadedInitially, loadTransactions]);
 
