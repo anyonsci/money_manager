@@ -3,16 +3,13 @@ import {
   UnifiedTransaction,
   formatCurrency,
   formatDate,
-  CATEGORY_COLORS,
+  getCategoryColor,
+  getCategoryIcon,
 } from '@money-manager/core';
 import {
-  ArrowDownRight,
-  ArrowUpRight,
   Edit2,
   Trash2,
   Ban,
-  Tag,
-  Calendar,
   CreditCard,
   AlertCircle,
   Loader2,
@@ -45,13 +42,8 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
   const isIncome = transaction.type === 'income';
   const isVoid = transaction.status === 'VOID';
 
-  const categoryStyle =
-    CATEGORY_COLORS[transaction.category] ||
-    CATEGORY_COLORS.Others || {
-      bg: 'bg-slate-500/10',
-      text: 'text-slate-400',
-      border: 'border-slate-500/20',
-    };
+  const categoryStyle = getCategoryColor(transaction.category);
+  const categoryIcon = getCategoryIcon(transaction.category);
 
   const handleExecuteDelete = async () => {
     if (!onDelete) return;
@@ -89,35 +81,30 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
         <div className="flex items-start justify-between gap-3">
           {/* Left info */}
           <div className="flex items-start gap-3 flex-1 min-w-0">
-            {/* Icon */}
+            {/* Category Icon */}
             <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border text-xl ${
                 isVoid
-                  ? 'border-slate-800 bg-slate-900 text-slate-500'
-                  : isIncome
-                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                  : 'border-rose-500/30 bg-rose-500/10 text-rose-400'
+                  ? 'border-slate-800 bg-slate-900/80 grayscale opacity-60'
+                  : `${categoryStyle.border} ${categoryStyle.bg}`
               }`}
+              data-testid="transaction-category-icon"
             >
-              {isVoid ? <Ban size={18} /> : isIncome ? <ArrowDownRight size={20} /> : <ArrowUpRight size={20} />}
+              <span className="leading-none">{categoryIcon}</span>
             </div>
 
             {/* Details */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 space-y-1">
+              {/* Top Title: Date & Account */}
               <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${categoryStyle.bg} ${categoryStyle.text} ${categoryStyle.border}`}
-                >
-                  <Tag size={10} />
-                  {transaction.category}
+                <span className="text-sm font-semibold text-white">
+                  {formatDate(dateToDisplay)}
                 </span>
-
-                {transaction.subCategory && (
-                  <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] font-medium text-slate-300">
-                    {transaction.subCategory}
-                  </span>
-                )}
-
+                <span className="text-slate-600 font-normal">•</span>
+                <span className="flex items-center gap-1 text-xs font-medium text-slate-300">
+                  <CreditCard size={12} className="text-slate-500" />
+                  {transaction.account}
+                </span>
                 {isVoid && (
                   <span className="rounded-full bg-rose-950/80 border border-rose-800/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-400">
                     Voided
@@ -125,25 +112,30 @@ export const TransactionCard: React.FC<TransactionCardProps> = ({
                 )}
               </div>
 
-              {/* Note / Description */}
+              {/* Line 2: Category & Subcategory */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${categoryStyle.bg} ${categoryStyle.text} ${categoryStyle.border}`}
+                >
+                  <span className="text-[12px] leading-none" data-testid="category-badge-icon">
+                    {categoryIcon}
+                  </span>
+                  <span>{transaction.category}</span>
+                </span>
+
+                {transaction.subCategory && (
+                  <span className="rounded-full bg-slate-800/90 border border-slate-700/60 px-2 py-0.5 text-[11px] font-medium text-slate-300">
+                    {transaction.subCategory}
+                  </span>
+                )}
+              </div>
+
+              {/* Line 3: Notes if available */}
               {transaction.note && (
-                <p className="mt-1.5 text-sm text-slate-200 line-clamp-2">
+                <p className="text-xs text-slate-400 line-clamp-2 pt-0.5">
                   {transaction.note}
                 </p>
               )}
-
-              {/* Meta: Account & Date */}
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-400">
-                <span className="flex items-center gap-1">
-                  <CreditCard size={12} className="text-slate-500" />
-                  {transaction.account}
-                </span>
-                <span className="text-slate-700">•</span>
-                <span className="flex items-center gap-1">
-                  <Calendar size={12} className="text-slate-500" />
-                  {formatDate(dateToDisplay)}
-                </span>
-              </div>
             </div>
           </div>
 

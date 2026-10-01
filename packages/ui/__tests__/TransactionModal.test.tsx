@@ -43,7 +43,7 @@ describe('UI Component - TransactionModal', () => {
     expect(screen.getByText('Edit Transaction')).toBeInTheDocument();
     expect(screen.getByDisplayValue('450.5')).toBeInTheDocument();
     expect(screen.getByDisplayValue('HDFC')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('salary')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('💼 salary')).toBeInTheDocument();
     expect(screen.getByDisplayValue('bonus')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Performance bonus')).toBeInTheDocument();
     expect(screen.getByDisplayValue('2025-02-28')).toBeInTheDocument();

@@ -1,6 +1,7 @@
 import {
   ALLOWED_CATEGORIES,
   CATEGORY_COLORS,
+  getCategoryColor,
   isAllowedCategory,
   getCanonicalCategory,
   matchCategoriesByPrefix,
@@ -124,6 +125,29 @@ describe('Core Constants - Categories', () => {
       expect(res.exact).toBe(false);
       expect(res.ambiguous).toBe(false);
       expect(res.canonicalCategory).toBeUndefined();
+    });
+  });
+
+  describe('getCategoryColor', () => {
+    it('returns correct color for exact category', () => {
+      expect(getCategoryColor('food')).toEqual(CATEGORY_COLORS.food);
+      expect(getCategoryColor('salary')).toEqual(CATEGORY_COLORS.salary);
+    });
+
+    it('handles uppercase and mixed-case category names', () => {
+      expect(getCategoryColor('FOOD')).toEqual(CATEGORY_COLORS.food);
+      expect(getCategoryColor('Salary')).toEqual(CATEGORY_COLORS.salary);
+      expect(getCategoryColor('  tRaVeL  ')).toEqual(CATEGORY_COLORS.travel);
+    });
+
+    it('resolves compound category names by prefix/token', () => {
+      expect(getCategoryColor('Food & Dining')).toEqual(CATEGORY_COLORS.food);
+      expect(getCategoryColor('Travel / Flight')).toEqual(CATEGORY_COLORS.travel);
+    });
+
+    it('falls back to others for unknown or empty category', () => {
+      expect(getCategoryColor('unknown_xyz')).toEqual(CATEGORY_COLORS.others);
+      expect(getCategoryColor('')).toEqual(CATEGORY_COLORS.others);
     });
   });
 });

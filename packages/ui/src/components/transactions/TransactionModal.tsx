@@ -4,13 +4,13 @@ import {
   TransactionFormValues,
   ALLOWED_CATEGORIES,
   formatInputDate,
+  getCategoryIcon,
 } from '@money-manager/core';
 import { Modal } from '../layout/Modal';
 import {
   Loader2,
   TrendingDown,
   TrendingUp,
-  Tag,
   Calendar,
   CreditCard,
   FileText,
@@ -180,8 +180,8 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         {/* Category & Subcategory */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="mb-1 flex items-center gap-1 text-xs font-semibold text-slate-400">
-              <Tag size={12} />
+            <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+              <span className="text-sm leading-none">{getCategoryIcon(category)}</span>
               Category
             </label>
             <select
@@ -191,7 +191,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
             >
               {(ALLOWED_CATEGORIES as readonly string[]).map((cat: string) => (
                 <option key={cat} value={cat}>
-                  {cat}
+                  {getCategoryIcon(cat)} {cat}
                 </option>
               ))}
             </select>

@@ -44,6 +44,8 @@ describe('UI Component - TransactionCard', () => {
     );
 
     expect(screen.getByText('food')).toBeInTheDocument();
+    expect(screen.getByTestId('transaction-category-icon')).toHaveTextContent('🍽️');
+    expect(screen.getByTestId('category-badge-icon')).toHaveTextContent('🍽️');
     expect(screen.getByText('groceries')).toBeInTheDocument();
     expect(screen.getByText('Supermarket shopping')).toBeInTheDocument();
     expect(screen.getByText('HDFC Card')).toBeInTheDocument();
@@ -60,6 +62,7 @@ describe('UI Component - TransactionCard', () => {
     );
 
     expect(screen.getByText('salary')).toBeInTheDocument();
+    expect(screen.getByTestId('transaction-category-icon')).toHaveTextContent('💼');
     expect(screen.getByText('+$5,000.00')).toBeInTheDocument();
     expect(screen.getByText('+$5,000.00').className).toContain('text-emerald-400');
   });
@@ -74,8 +77,32 @@ describe('UI Component - TransactionCard', () => {
     );
 
     expect(screen.getByText('Voided')).toBeInTheDocument();
+    expect(screen.getByTestId('transaction-category-icon')).toHaveTextContent('🎬');
     const amountElem = screen.getByText('-$200.00');
     expect(amountElem.className).toContain('line-through');
+  });
+
+  it('renders capitalized and compound category names with the correct icon and styles', () => {
+    const customTx: UnifiedTransaction = {
+      id: 'tx-custom-1',
+      amount: 80,
+      type: 'expense',
+      category: 'Food & Dining',
+      account: 'Cash',
+      transactionDate: '2025-01-25',
+    };
+
+    render(
+      <TransactionCard
+        transaction={customTx}
+        currency="USD"
+        locale="en-US"
+      />
+    );
+
+    expect(screen.getByText('Food & Dining')).toBeInTheDocument();
+    expect(screen.getByTestId('transaction-category-icon')).toHaveTextContent('🍽️');
+    expect(screen.getByTestId('category-badge-icon')).toHaveTextContent('🍽️');
   });
 
   it('calls onEdit when edit button is clicked', () => {

@@ -9,7 +9,8 @@ import {
 import {
   UnifiedTransaction,
   TransactionFormValues,
-  ALLOWED_CATEGORIES
+  ALLOWED_CATEGORIES,
+  getCategoryIcon,
 } from '@money-manager/core';
 import { Plus, Search, Filter } from 'lucide-react';
 
@@ -116,7 +117,7 @@ export const TransactionsPage: React.FC = () => {
             <option value="">All Categories</option>
             {ALLOWED_CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
-                {cat}
+                {getCategoryIcon(cat)} {cat}
               </option>
             ))}
           </select>

@@ -73,6 +73,18 @@ const CATEGORY_ICON_MAP: Record<string, string> = {
 };
 
 export const getCategoryIcon = (category: string): string => {
-  const key = (category || '').toLowerCase().trim();
-  return CATEGORY_ICON_MAP[key] || '🏷️';
+  const normalized = (category || '').trim().toLowerCase();
+  if (!normalized) return '🏷️';
+
+  if (CATEGORY_ICON_MAP[normalized]) {
+    return CATEGORY_ICON_MAP[normalized];
+  }
+
+  const matched = Object.keys(CATEGORY_ICON_MAP).find(
+    (cat) =>
+      cat !== 'others' &&
+      (normalized.startsWith(cat) || normalized.split(/[\s&/_-]+/).includes(cat))
+  );
+
+  return (matched && CATEGORY_ICON_MAP[matched]) || '🏷️';
 };

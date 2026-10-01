@@ -152,6 +152,12 @@ describe('Core Formatters', () => {
       expect(getCategoryIcon('SaLaRy')).toBe('💼');
     });
 
+    it('matches compound categories by prefix and token', () => {
+      expect(getCategoryIcon('Food & Dining')).toBe('🍽️');
+      expect(getCategoryIcon('Travel / Flight')).toBe('✈️');
+      expect(getCategoryIcon('Medical - Hospital')).toBe('🩺');
+    });
+
     it('returns default icon for unknown category or empty input', () => {
       expect(getCategoryIcon('unknown_cat')).toBe('🏷️');
       expect(getCategoryIcon('')).toBe('🏷️');

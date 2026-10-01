@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
-import { UnifiedTransaction, formatCurrency } from '@money-manager/core';
+import { UnifiedTransaction, formatCurrency, getCategoryIcon } from '@money-manager/core';
 
 export interface CategoryPieChartProps {
   transactions: UnifiedTransaction[];
@@ -124,7 +124,10 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                 className="h-2.5 w-2.5 shrink-0 rounded-full"
                 style={{ backgroundColor: color }}
               />
-              <span className="truncate text-slate-300 flex-1">{item.name}</span>
+              <span className="truncate text-slate-300 flex-1 flex items-center gap-1.5">
+                <span className="text-sm leading-none">{getCategoryIcon(item.name)}</span>
+                <span>{item.name}</span>
+              </span>
               <span className="text-[11px] text-slate-500 font-medium">{pct}%</span>
             </div>
           );

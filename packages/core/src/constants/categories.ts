@@ -35,6 +35,29 @@ export const CATEGORY_COLORS: Record<string, { bg: string; text: string; border:
 };
 
 /**
+ * Returns category color token definitions, supporting case-insensitivity,
+ * whitespace trimming, and compound category names.
+ */
+export const getCategoryColor = (
+  category: string
+): { bg: string; text: string; border: string } => {
+  const normalized = (category || '').trim().toLowerCase();
+  if (!normalized) return CATEGORY_COLORS.others;
+
+  if (CATEGORY_COLORS[normalized]) {
+    return CATEGORY_COLORS[normalized];
+  }
+
+  const matched = ALLOWED_CATEGORIES.find(
+    (cat) =>
+      cat !== 'others' &&
+      (normalized.startsWith(cat) || normalized.split(/[\s&/_-]+/).includes(cat))
+  );
+
+  return (matched && CATEGORY_COLORS[matched]) || CATEGORY_COLORS.others;
+};
+
+/**
  * Checks if a given category string matches an allowed category (case-insensitive).
  */
 export const isAllowedCategory = (category: string): boolean => {
