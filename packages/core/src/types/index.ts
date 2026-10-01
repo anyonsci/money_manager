@@ -43,6 +43,7 @@ export type Transaction = UnifiedTransaction;
 export interface PaginationMeta {
   page: number;
   limit: number;
+  offset?: number;
   total?: number;
   totalRows?: number;
   totalPages: number;

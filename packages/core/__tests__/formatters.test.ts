@@ -5,6 +5,7 @@ import {
   formatInputDate,
   getTransactionTypeLabel,
   getCategoryIcon,
+  formatTransactionDateParts,
 } from '../src/formatters/index';
 
 describe('Core Formatters', () => {
@@ -161,6 +162,35 @@ describe('Core Formatters', () => {
     it('returns default icon for unknown category or empty input', () => {
       expect(getCategoryIcon('unknown_cat')).toBe('🏷️');
       expect(getCategoryIcon('')).toBe('🏷️');
+    });
+  });
+
+  describe('formatTransactionDateParts', () => {
+    it('formats YYYY-MM-DD into 2 lines with 2-digit day, short month, and year', () => {
+      expect(formatTransactionDateParts('2026-10-01')).toEqual({
+        dayMonth: '01 Oct',
+        year: '2026',
+      });
+      expect(formatTransactionDateParts('2025-09-30')).toEqual({
+        dayMonth: '30 Sep',
+        year: '2025',
+      });
+      expect(formatTransactionDateParts('2024-01-05')).toEqual({
+        dayMonth: '05 Jan',
+        year: '2024',
+      });
+    });
+
+    it('formats ISO timestamps', () => {
+      const parts = formatTransactionDateParts('2026-07-28T07:45:00.000Z');
+      expect(parts.year).toBe('2026');
+      expect(parts.dayMonth).toMatch(/\d{2}\s\w{3}/);
+    });
+
+    it('returns fallback for falsy or invalid input', () => {
+      expect(formatTransactionDateParts(undefined)).toEqual({ dayMonth: '--', year: '----' });
+      expect(formatTransactionDateParts('')).toEqual({ dayMonth: '--', year: '----' });
+      expect(formatTransactionDateParts('invalid')).toEqual({ dayMonth: 'invali', year: '' });
     });
   });
 });

@@ -14,6 +14,7 @@ import {
   Calendar,
   CreditCard,
   FileText,
+  Trash2,
 } from 'lucide-react';
 
 export interface TransactionModalProps {
@@ -38,6 +39,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   defaultAccount = 'Checking',
   onClose,
   onSubmit,
+  onDelete,
 }) => {
   const isVisible = open !== undefined ? open : (isOpen ?? false);
   const isEditMode = mode === 'edit' || !!transaction;
@@ -50,7 +52,29 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
   const [note, setNote] = useState('');
   const [date, setDate] = useState(formatInputDate());
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (!onDelete || !transaction) return;
+    if (!isConfirmingDelete) {
+      setIsConfirmingDelete(true);
+      return;
+    }
+    setDeleting(true);
+    setErrorMsg(null);
+    try {
+      await onDelete(transaction);
+      onClose();
+    } catch (err: any) {
+      console.error('Failed to delete transaction:', err);
+      setErrorMsg(err.message || 'Failed to delete transaction');
+    } finally {
+      setDeleting(false);
+      setIsConfirmingDelete(false);
+    }
+  };
 
   useEffect(() => {
     if (transaction) {
@@ -259,23 +283,48 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         </div>
 
         {/* Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
-          <button
-            type="button"
-            disabled={submitting}
-            onClick={onClose}
-            className="rounded-xl border border-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-500 disabled:opacity-50 transition active:scale-95"
-          >
-            {submitting && <Loader2 size={14} className="animate-spin" />}
-            {isEditMode ? 'Save Changes' : 'Create Entry'}
-          </button>
+        <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-800">
+          <div>
+            {isEditMode && onDelete && transaction && (
+              <button
+                type="button"
+                disabled={submitting || deleting}
+                onClick={handleDelete}
+                className={`flex items-center gap-1.5 rounded-xl border px-3.5 py-2 text-xs font-semibold transition active:scale-95 disabled:opacity-50 ${
+                  isConfirmingDelete
+                    ? 'border-rose-600 bg-rose-600 text-white animate-pulse'
+                    : 'border-rose-900/60 bg-rose-950/40 text-rose-400 hover:bg-rose-900/60 hover:text-white'
+                }`}
+                data-testid="modal-delete-button"
+              >
+                {deleting ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Trash2 size={14} />
+                )}
+                <span>{isConfirmingDelete ? 'Confirm Delete?' : 'Delete'}</span>
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={submitting || deleting}
+              onClick={onClose}
+              className="rounded-xl border border-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || deleting}
+              className="flex items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-500 disabled:opacity-50 transition active:scale-95"
+            >
+              {submitting && <Loader2 size={14} className="animate-spin" />}
+              {isEditMode ? 'Save Changes' : 'Create Entry'}
+            </button>
+          </div>
         </div>
       </form>
     </Modal>

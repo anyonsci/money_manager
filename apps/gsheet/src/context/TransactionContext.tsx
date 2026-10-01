@@ -3,15 +3,20 @@ import { UnifiedTransaction, TransactionFormValues } from '@money-manager/core';
 import { gsheetStorageAdapter } from '../adapters/GSheetStorageAdapter';
 import { useAuth } from './AuthContext';
 
-const DEFAULT_LIMIT = 200;
+const INITIAL_LIMIT = 10;
+const SUBSEQUENT_LIMIT = 200;
 
 interface TransactionContextType {
   transactions: UnifiedTransaction[];
   page: number;
   totalPages: number;
   loading: boolean;
+  loadingMore: boolean;
+  hasMore: boolean;
   hasLoadedInitially: boolean;
+  totalCount?: number;
   loadTransactions: (nextPage?: number, forceRefresh?: boolean) => Promise<void>;
+  loadMoreTransactions: () => Promise<void>;
   createTransactionItem: (values: TransactionFormValues) => Promise<UnifiedTransaction | undefined>;
   updateTransactionItem: (selectedTransaction: UnifiedTransaction, values: TransactionFormValues) => Promise<UnifiedTransaction | undefined>;
   deleteTransactionItem: (transaction: UnifiedTransaction) => Promise<void>;
@@ -25,7 +30,10 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [hasLoadedInitially, setHasLoadedInitially] = useState(false);
+  const [totalCount, setTotalCount] = useState<number | undefined>(undefined);
 
   const loadTransactions = useCallback(async (nextPage = 1, forceRefresh = false) => {
     if (!accessToken && !forceRefresh) return;
@@ -33,11 +41,15 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
     try {
       const response = await gsheetStorageAdapter.fetchTransactions({
         page: nextPage,
-        limit: DEFAULT_LIMIT
+        limit: INITIAL_LIMIT,
+        offset: 0,
       });
       setTransactions(response.data);
       setPage(response.meta.page);
       setTotalPages(response.meta.totalPages);
+      const total = response.meta.totalRows ?? response.meta.total;
+      setTotalCount(total);
+      setHasMore(response.data.length === INITIAL_LIMIT && (total !== undefined ? response.data.length < total : true));
       setHasLoadedInitially(true);
     } catch (error) {
       console.error('Failed to load transactions:', error);
@@ -45,6 +57,39 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       setLoading(false);
     }
   }, [accessToken]);
+
+  const loadMoreTransactions = useCallback(async () => {
+    if (!accessToken || loadingMore || loading || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const currentOffset = transactions.length;
+      const nextPage = Math.floor(currentOffset / SUBSEQUENT_LIMIT) + 1;
+      const response = await gsheetStorageAdapter.fetchTransactions({
+        page: nextPage,
+        limit: SUBSEQUENT_LIMIT,
+        offset: currentOffset,
+      });
+
+      const newItems = response.data;
+      setTransactions((prev) => {
+        const existingIds = new Set(prev.map((t) => t.id));
+        const deduped = newItems.filter((t) => !existingIds.has(t.id));
+        return [...prev, ...deduped];
+      });
+
+      const total = response.meta.totalRows ?? response.meta.total ?? totalCount;
+      if (total !== undefined) {
+        setTotalCount(total);
+      }
+      const updatedCount = currentOffset + newItems.length;
+      const moreAvailable = newItems.length === SUBSEQUENT_LIMIT && (total !== undefined ? updatedCount < total : true);
+      setHasMore(moreAvailable);
+    } catch (error) {
+      console.error('Failed to load more transactions:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [accessToken, loadingMore, loading, hasMore, transactions.length, totalCount]);
 
   useEffect(() => {
     if (accessToken && !hasLoadedInitially) {
@@ -104,8 +149,12 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
         page,
         totalPages,
         loading,
+        loadingMore,
+        hasMore,
+        totalCount,
         hasLoadedInitially,
         loadTransactions,
+        loadMoreTransactions,
         createTransactionItem,
         updateTransactionItem,
         deleteTransactionItem,

@@ -58,6 +58,10 @@ export function createPwaPlugins(options: PwaConfigOptions): PluginOption[] {
 
   const pwaPlugin = VitePWA({
     injectRegister: null,
+    workbox: {
+      skipWaiting: true,
+      clientsClaim: true,
+    },
     manifest: {
       name,
       short_name: shortName,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { TransactionCard } from '../src/components/transactions/TransactionCard';
 import { UnifiedTransaction } from '@money-manager/core';
 
@@ -34,7 +34,7 @@ describe('UI Component - TransactionCard', () => {
     transactionDate: '2025-01-20',
   };
 
-  it('renders expense transaction details correctly', () => {
+  it('renders expense transaction with 2-line date, category/subcategory title, notes, amount, and account', () => {
     render(
       <TransactionCard
         transaction={expenseTx}
@@ -43,16 +43,27 @@ describe('UI Component - TransactionCard', () => {
       />
     );
 
+    // Left date badge in 2 lines
+    const dateBadge = screen.getByTestId('transaction-date-badge');
+    expect(dateBadge).toHaveTextContent('15 Jan');
+    expect(dateBadge).toHaveTextContent('2025');
+
+    // Middle title & subtitle
     expect(screen.getByText('food')).toBeInTheDocument();
-    expect(screen.getByTestId('transaction-category-icon')).toHaveTextContent('🍽️');
     expect(screen.getByTestId('category-badge-icon')).toHaveTextContent('🍽️');
     expect(screen.getByText('groceries')).toBeInTheDocument();
     expect(screen.getByText('Supermarket shopping')).toBeInTheDocument();
-    expect(screen.getByText('HDFC Card')).toBeInTheDocument();
+
+    // Right amount & account
     expect(screen.getByText('-$150.00')).toBeInTheDocument();
+    expect(screen.getByText('HDFC Card')).toBeInTheDocument();
+
+    // Verify edit/delete icon buttons are NOT present in the card
+    expect(screen.queryByTitle('Edit transaction')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Delete transaction')).not.toBeInTheDocument();
   });
 
-  it('renders income transaction details correctly with positive sign', () => {
+  it('renders income transaction with positive amount styling', () => {
     render(
       <TransactionCard
         transaction={incomeTx}
@@ -62,9 +73,10 @@ describe('UI Component - TransactionCard', () => {
     );
 
     expect(screen.getByText('salary')).toBeInTheDocument();
-    expect(screen.getByTestId('transaction-category-icon')).toHaveTextContent('💼');
+    expect(screen.getByTestId('category-badge-icon')).toHaveTextContent('💼');
     expect(screen.getByText('+$5,000.00')).toBeInTheDocument();
     expect(screen.getByText('+$5,000.00').className).toContain('text-emerald-400');
+    expect(screen.getByText('Checking Account')).toBeInTheDocument();
   });
 
   it('renders void status badge and line-through amount', () => {
@@ -77,35 +89,11 @@ describe('UI Component - TransactionCard', () => {
     );
 
     expect(screen.getByText('Voided')).toBeInTheDocument();
-    expect(screen.getByTestId('transaction-category-icon')).toHaveTextContent('🎬');
     const amountElem = screen.getByText('-$200.00');
     expect(amountElem.className).toContain('line-through');
   });
 
-  it('renders capitalized and compound category names with the correct icon and styles', () => {
-    const customTx: UnifiedTransaction = {
-      id: 'tx-custom-1',
-      amount: 80,
-      type: 'expense',
-      category: 'Food & Dining',
-      account: 'Cash',
-      transactionDate: '2025-01-25',
-    };
-
-    render(
-      <TransactionCard
-        transaction={customTx}
-        currency="USD"
-        locale="en-US"
-      />
-    );
-
-    expect(screen.getByText('Food & Dining')).toBeInTheDocument();
-    expect(screen.getByTestId('transaction-category-icon')).toHaveTextContent('🍽️');
-    expect(screen.getByTestId('category-badge-icon')).toHaveTextContent('🍽️');
-  });
-
-  it('calls onEdit when edit button is clicked', () => {
+  it('triggers onEdit when the whole card is clicked', () => {
     const handleEdit = jest.fn();
     render(
       <TransactionCard
@@ -114,52 +102,22 @@ describe('UI Component - TransactionCard', () => {
       />
     );
 
-    const editBtn = screen.getByTitle('Edit transaction');
-    fireEvent.click(editBtn);
+    const card = screen.getByTestId('transaction-card');
+    fireEvent.click(card);
     expect(handleEdit).toHaveBeenCalledWith(expenseTx);
   });
 
-  it('opens delete confirmation modal and executes onDelete callback', async () => {
-    const handleDelete = jest.fn().mockResolvedValue(undefined);
+  it('triggers onEdit via Enter keypress on card', () => {
+    const handleEdit = jest.fn();
     render(
       <TransactionCard
         transaction={expenseTx}
-        onDelete={handleDelete}
+        onEdit={handleEdit}
       />
     );
 
-    const deleteBtn = screen.getByTitle('Delete transaction');
-    fireEvent.click(deleteBtn);
-
-    expect(screen.getByText('Are you sure you want to delete this transaction?')).toBeInTheDocument();
-
-    const confirmDeleteBtn = screen.getAllByRole('button', { name: /delete/i })[1];
-    await act(async () => {
-      fireEvent.click(confirmDeleteBtn);
-    });
-
-    expect(handleDelete).toHaveBeenCalledWith(expenseTx);
-  });
-
-  it('opens void confirmation modal and executes onVoid callback', async () => {
-    const handleVoid = jest.fn().mockResolvedValue(undefined);
-    render(
-      <TransactionCard
-        transaction={expenseTx}
-        onVoid={handleVoid}
-      />
-    );
-
-    const voidBtn = screen.getByTitle('Void transaction (Ledger)');
-    fireEvent.click(voidBtn);
-
-    expect(screen.getByText('Void this ledger entry?')).toBeInTheDocument();
-
-    const confirmVoidBtn = screen.getByRole('button', { name: /void entry/i });
-    await act(async () => {
-      fireEvent.click(confirmVoidBtn);
-    });
-
-    expect(handleVoid).toHaveBeenCalledWith(expenseTx);
+    const card = screen.getByTestId('transaction-card');
+    fireEvent.keyDown(card, { key: 'Enter' });
+    expect(handleEdit).toHaveBeenCalledWith(expenseTx);
   });
 });

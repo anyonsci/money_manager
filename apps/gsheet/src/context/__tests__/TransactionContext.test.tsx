@@ -48,7 +48,7 @@ describe('gsheet TransactionContext Deferral', () => {
     expect(gsheetStorageAdapter.fetchTransactions).not.toHaveBeenCalled();
   });
 
-  test('fetches transactions on non-home route load', async () => {
+  test('fetches initial 10 transactions on non-home route load', async () => {
     window.location.hash = '#/transactions';
 
     render(
@@ -60,7 +60,8 @@ describe('gsheet TransactionContext Deferral', () => {
     await waitFor(() => {
       expect(gsheetStorageAdapter.fetchTransactions).toHaveBeenCalledWith({
         page: 1,
-        limit: 200,
+        limit: 10,
+        offset: 0,
       });
     });
   });

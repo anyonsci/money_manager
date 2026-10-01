@@ -3,7 +3,7 @@ import { useTransactions } from '../context/TransactionContext';
 import {
   TransactionList,
   TransactionModal,
-  Pagination,
+  LoadMoreButton,
 } from '@money-manager/ui';
 import {
   UnifiedTransaction,
@@ -17,10 +17,12 @@ export const TransactionsPage: React.FC = () => {
   const {
     transactions,
     loading,
+    loadingMore,
+    hasMore,
+    totalCount,
     hasLoadedInitially,
-    page,
-    totalPages,
     loadTransactions,
+    loadMoreTransactions,
     createTransactionItem,
     updateTransactionItem,
     deleteTransactionItem,
@@ -40,15 +42,16 @@ export const TransactionsPage: React.FC = () => {
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((t) => {
+      if (!t) return false;
       if (typeFilter !== 'all' && t.type !== typeFilter) return false;
-      if (categoryFilter && t.category.toLowerCase() !== categoryFilter.toLowerCase()) return false;
+      if (categoryFilter && String(t.category ?? '').toLowerCase() !== categoryFilter.toLowerCase()) return false;
       if (search) {
         const query = search.toLowerCase();
-        const matchesAccount = t.account?.toLowerCase().includes(query);
-        const matchesCat = t.category?.toLowerCase().includes(query);
-        const matchesSubcat = t.subCategory?.toLowerCase().includes(query);
-        const matchesNote = t.note?.toLowerCase().includes(query);
-        const matchesAmount = String(t.amount).includes(query);
+        const matchesAccount = String(t.account ?? '').toLowerCase().includes(query);
+        const matchesCat = String(t.category ?? '').toLowerCase().includes(query);
+        const matchesSubcat = String(t.subCategory ?? '').toLowerCase().includes(query);
+        const matchesNote = String(t.note ?? '').toLowerCase().includes(query);
+        const matchesAmount = t.amount != null && !isNaN(Number(t.amount)) ? String(t.amount).includes(query) : false;
         if (!matchesAccount && !matchesCat && !matchesSubcat && !matchesNote && !matchesAmount) {
           return false;
         }
@@ -154,12 +157,14 @@ export const TransactionsPage: React.FC = () => {
         onDelete={handleDelete}
       />
 
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        totalRows={transactions.length}
-        onPageChange={(p) => loadTransactions(p)}
-        loading={loading}
+      <LoadMoreButton
+        onLoadMore={loadMoreTransactions}
+        hasMore={hasMore}
+        isLoading={loadingMore}
+        loadedCount={filteredTransactions.length}
+        totalCount={totalCount}
+        batchSize={200}
+        autoScroll={true}
       />
 
       <TransactionModal

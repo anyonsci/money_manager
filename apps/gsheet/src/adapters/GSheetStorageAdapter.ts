@@ -124,16 +124,16 @@ const formatIsoTimestamp = (dateString?: string, fallback?: string) => {
 
 const normalizeTransaction = (item: any): UnifiedTransaction => {
   return {
-    id: item.id || `tx-${Date.now()}`,
+    id: String(item.id || `tx-${Date.now()}`),
     transactionDate: item.timestamp || item.transactionDate || item.date || new Date().toISOString(),
     timestamp: item.timestamp || item.transactionDate || item.date,
-    amount: Number(item.amount),
-    account: item.account,
-    category: item.category,
-    subCategory: item.subCategory || '',
-    note: item.note || '',
-    type: item.type,
-    status: 'POSTED',
+    amount: Number(item.amount) || 0,
+    account: item.account != null ? String(item.account) : '',
+    category: item.category != null ? String(item.category) : '',
+    subCategory: item.subCategory != null ? String(item.subCategory) : '',
+    note: item.note != null ? String(item.note) : '',
+    type: item.type === 'income' ? 'income' : 'expense',
+    status: item.status || 'POSTED',
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
     createdBy: item.createdBy,
@@ -146,14 +146,16 @@ export class GSheetStorageAdapter implements StorageAdapter {
   async fetchTransactions(params: {
     page?: number;
     limit?: number;
+    offset?: number;
     filters?: TransactionFilter;
   } = {}): Promise<PaginatedResult<UnifiedTransaction>> {
     const page = params.page || 1;
     const limit = params.limit || DEFAULT_LIMIT;
+    const offset = params.offset !== undefined ? params.offset : (page - 1) * limit;
     const apiUrl = getApiUrl();
 
     if (!apiUrl) {
-      const start = (page - 1) * limit;
+      const start = offset;
       const end = start + limit;
       const pageItems = mockTransactions.slice(start, end);
       const totalRows = mockTransactions.length;
@@ -164,6 +166,7 @@ export class GSheetStorageAdapter implements StorageAdapter {
         meta: {
           page,
           limit,
+          offset,
           total: totalRows,
           totalRows,
           totalPages
@@ -174,7 +177,8 @@ export class GSheetStorageAdapter implements StorageAdapter {
     const response = await apiClient.post(apiUrl, JSON.stringify({
       action: 'read',
       page,
-      limit
+      limit,
+      offset
     }));
 
     const resData = response.data as ApiResponse<any[]>;
@@ -186,6 +190,7 @@ export class GSheetStorageAdapter implements StorageAdapter {
       meta: resData.meta || {
         page,
         limit,
+        offset,
         total: normalized.length,
         totalRows: normalized.length,
         totalPages: 1

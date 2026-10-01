@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useEffect } from 'react';
 import { Route, Routes, useNavigate } from 'react-router-dom';
-import { ResponsiveLayout, PageLoader } from '@money-manager/ui';
+import { ResponsiveLayout, PageLoader, ErrorBoundary } from '@money-manager/ui';
 import { LoginView } from './components/auth/LoginView';
 import { useAuth } from './context/AuthContext';
 import HomePage from './pages/HomePage';
@@ -85,14 +85,16 @@ export const App: React.FC = () => {
         </button>
       }
     >
-      <Suspense fallback={<PageLoader message="Loading view..." />}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/transactions" element={<TransactionsPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
-          <Route path="/settings" element={<UserSettingsView />} />
-        </Routes>
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={<PageLoader message="Loading view..." />}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/transactions" element={<TransactionsPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/settings" element={<UserSettingsView />} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </ResponsiveLayout>
   );
 };

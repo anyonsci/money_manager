@@ -17,6 +17,14 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
+// Mock IntersectionObserver for infinite scroll components
+global.IntersectionObserver = class IntersectionObserver {
+  constructor(public callback?: any) {}
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as any;
+
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

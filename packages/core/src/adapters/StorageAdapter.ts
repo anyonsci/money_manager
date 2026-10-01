@@ -15,6 +15,7 @@ export interface StorageAdapter {
   fetchTransactions(params?: {
     page?: number;
     limit?: number;
+    offset?: number;
     filters?: TransactionFilter;
   }): Promise<PaginatedResult<UnifiedTransaction>>;
 

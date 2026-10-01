@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { useWorkspace } from '@money-manager/dc-client';
-import { ResponsiveLayout, PageLoader, Modal } from '@money-manager/ui';
+import { ResponsiveLayout, PageLoader, Modal, ErrorBoundary } from '@money-manager/ui';
 import { LoginView } from './components/auth/LoginView';
 import { HomePage } from './pages/HomePage';
 import { TransactionsPage } from './pages/TransactionsPage';
@@ -155,12 +155,14 @@ export const App: React.FC = () => {
           </button>
         }
       >
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/transactions" element={<TransactionsPage />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <ErrorBoundary>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/transactions" element={<TransactionsPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </ErrorBoundary>
       </ResponsiveLayout>
 
       <Modal

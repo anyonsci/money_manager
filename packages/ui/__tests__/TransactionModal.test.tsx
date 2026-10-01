@@ -133,4 +133,44 @@ describe('UI Component - TransactionModal', () => {
     expect(screen.getByText('Server failed to save transaction')).toBeInTheDocument();
     expect(handleClose).not.toHaveBeenCalled();
   });
+
+  it('renders delete button in edit mode and requires confirmation before calling onDelete', async () => {
+    const handleDelete = jest.fn().mockResolvedValue(undefined);
+    const handleClose = jest.fn();
+    const tx: UnifiedTransaction = {
+      id: 'tx-del-1',
+      amount: 100,
+      type: 'expense',
+      category: 'food',
+      account: 'Cash',
+      transactionDate: '2025-01-15',
+    };
+
+    render(
+      <TransactionModal
+        open={true}
+        transaction={tx}
+        onClose={handleClose}
+        onSubmit={jest.fn()}
+        onDelete={handleDelete}
+      />
+    );
+
+    const deleteBtn = screen.getByTestId('modal-delete-button');
+    expect(deleteBtn).toBeInTheDocument();
+    expect(deleteBtn).toHaveTextContent('Delete');
+
+    // First click asks for confirmation
+    fireEvent.click(deleteBtn);
+    expect(deleteBtn).toHaveTextContent('Confirm Delete?');
+    expect(handleDelete).not.toHaveBeenCalled();
+
+    // Second click executes delete
+    await act(async () => {
+      fireEvent.click(deleteBtn);
+    });
+
+    expect(handleDelete).toHaveBeenCalledWith(tx);
+    expect(handleClose).toHaveBeenCalledTimes(1);
+  });
 });

@@ -39,9 +39,9 @@ export const CATEGORY_COLORS: Record<string, { bg: string; text: string; border:
  * whitespace trimming, and compound category names.
  */
 export const getCategoryColor = (
-  category: string
+  category?: unknown
 ): { bg: string; text: string; border: string } => {
-  const normalized = (category || '').trim().toLowerCase();
+  const normalized = String(category ?? '').trim().toLowerCase();
   if (!normalized) return CATEGORY_COLORS.others;
 
   if (CATEGORY_COLORS[normalized]) {
@@ -60,18 +60,18 @@ export const getCategoryColor = (
 /**
  * Checks if a given category string matches an allowed category (case-insensitive).
  */
-export const isAllowedCategory = (category: string): boolean => {
-  const normalized = category.trim().toLowerCase();
+export const isAllowedCategory = (category?: unknown): boolean => {
+  const normalized = String(category ?? '').trim().toLowerCase();
   return ALLOWED_CATEGORIES.some(cat => cat.toLowerCase() === normalized);
 };
 
 /**
  * Returns the canonical casing for an allowed category.
  */
-export const getCanonicalCategory = (category: string): string => {
-  const normalized = category.trim().toLowerCase();
+export const getCanonicalCategory = (category?: unknown): string => {
+  const normalized = String(category ?? '').trim().toLowerCase();
   const found = ALLOWED_CATEGORIES.find(cat => cat.toLowerCase() === normalized);
-  return found || category;
+  return found || String(category ?? '');
 };
 
 export interface CategoryResolution {
@@ -84,8 +84,8 @@ export interface CategoryResolution {
 /**
  * Finds all allowed categories that start with the given prefix (case-insensitive).
  */
-export const matchCategoriesByPrefix = (prefix: string): AllowedCategory[] => {
-  const normalized = prefix.trim().toLowerCase();
+export const matchCategoriesByPrefix = (prefix?: unknown): AllowedCategory[] => {
+  const normalized = String(prefix ?? '').trim().toLowerCase();
   if (!normalized) return [];
   return ALLOWED_CATEGORIES.filter(cat => cat.toLowerCase().startsWith(normalized));
 };
@@ -93,8 +93,8 @@ export const matchCategoriesByPrefix = (prefix: string): AllowedCategory[] => {
 /**
  * Resolves a category string by exact match first, then by unique prefix match.
  */
-export const resolveCategory = (categoryInput: string): CategoryResolution => {
-  const normalized = categoryInput.trim().toLowerCase();
+export const resolveCategory = (categoryInput?: unknown): CategoryResolution => {
+  const normalized = String(categoryInput ?? '').trim().toLowerCase();
   if (!normalized) {
     return { matches: [], exact: false, ambiguous: false };
   }
