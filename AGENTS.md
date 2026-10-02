@@ -42,7 +42,7 @@ money_manager/
 │   │   ├── src/components/layout/       # ResponsiveLayout (Slot-based), Navigation, Modal
 │   │   ├── src/components/common/       # PwaInstallPrompt, PageLoader
 │   │   ├── src/components/analytics/    # AnalyticsSummary (3 cards), CategoryPieChart (Recharts)
-│   │   ├── src/components/transactions/ # TransactionCard, TransactionList, TransactionModal, Pagination
+│   │   ├── src/components/transactions/ # TransactionCard, TransactionList, TransactionModal, LoadMoreButton, Pagination
 │   │   └── __tests__/                   # Component tests with @testing-library/react
 │   │
 │   ├── pwa/                             # 📲 @money-manager/pwa (Standardized PWA Framework)
@@ -123,6 +123,23 @@ money_manager/
   ```bash
   npx playwright show-report
   ```
+- ⚠️ **Resource-Constrained Environment Rule**: Headless browser testing requires heavy CPU and RAM. On resource-constrained environments (e.g. VPS/VM with ≤1GB RAM, 2 vCPUs, or high hypervisor steal time), **NEVER run Playwright E2E tests** (`npm run test:e2e`) unless explicitly requested by the user, as this can cause swap thrashing and freeze the host.
+
+### 7. Resource-Constrained & Low-Memory Execution Standard
+When developing or running tests/builds in memory- or CPU-constrained environments:
+- **Single-Threaded In-Band Testing**: Run Jest with `--runInBand`, `maxWorkers: 1`, `workerIdleMemoryLimit: '256MB'`, and a generous `testTimeout: 20000` (in `jest.config.cjs`) so slow VM CPU time does not cause false test timeouts.
+- **Node Memory Limits**: Keep Node memory bounded (e.g., `NODE_OPTIONS="--max-old-space-size=512"`).
+- **Fast App Builds**: In `apps/*/package.json`, build scripts must be `"build": "vite build"`. Do **NOT** chain redundant `tsc -b && vite build` inside individual app build scripts, as TypeScript checks are performed independently per package/app with `tsc --noEmit`.
+- **Zero Orphan Background Tasks**: Avoid leaving background build watchers or long-running tasks running when not in active use.
+
+### 8. Transaction UX, Card Design & Filtering Standards
+- **Batch "Load More" Pagination**: Transaction lists use batch loading via `<LoadMoreButton />`. The initial view loads **10 transactions** for fast rendering; subsequent clicks on "Load More" load **200 transactions** per batch. Do **NOT** use automated infinite scroll on window scroll, as it causes performance degradation and DOM/network thrashing on constrained devices.
+- **Transaction Filters**: Keep filtering lean. Only provide a text search input (with safe null-checks across notes, categories, and accounts) and a category dropdown filter. Do **NOT** include expense vs. income toggle filters.
+- **Transaction Card Specification**:
+  - **Left Section**: 2-line date presentation. Line 1 shows date (e.g., `01 Oct`), Line 2 shows year in smaller, muted text (e.g., `2026`).
+  - **Main Section**: Top title shows Category and Subcategory; subtitle shows Notes.
+  - **Right Section**: Amount on top; Account name below.
+  - **Actions**: Remove individual edit and delete icons from the card surface. The entire card is clickable to open the edit form (`TransactionModal`). The delete action resides inside the edit modal.
 
 ---
 
@@ -130,8 +147,13 @@ money_manager/
 
 ### Scenario A: Adding a new DeriveCount App (e.g. `apps/dc_budget_planner`)
 1. Create directory `apps/dc_budget_planner` with `package.json` and `tsconfig.json`.
-2. Add dependencies:
+2. Add scripts and dependencies to `package.json`:
    ```json
+   "scripts": {
+     "dev": "vite",
+     "build": "vite build",
+     "preview": "vite preview"
+   },
    "dependencies": {
      "@money-manager/core": "*",
      "@money-manager/ui": "*",
@@ -200,7 +222,7 @@ npx jest packages/ui
 npx jest packages/pwa
 npx jest packages/tailwind-preset
 
-# Run Playwright E2E & visual regression tests
+# Run Playwright E2E & visual regression tests (⚠️ SKIP in resource-constrained environments!)
 npm run test:e2e
 
 # Update Playwright visual snapshot golden baselines
@@ -228,6 +250,8 @@ Before completing any task, agents must run and verify:
 2. `npx tsc --project packages/ui/tsconfig.json --noEmit`
 3. `npx tsc --project packages/pwa/tsconfig.json --noEmit`
 4. `npx tsc --project packages/dc-client/tsconfig.json --noEmit`
-5. `npm test` (Ensures 100% passing unit tests across all monorepo packages for large changes).
-6. `npm run test:e2e` (Ensures 100% passing visual regression and functional E2E tests for UI changes).
-7. `npm run build` (Ensures zero build errors and verifies `dist/` packaging).
+5. `npx tsc --project apps/gsheet/tsconfig.json --noEmit`
+6. `npx tsc --project apps/dc_expense_manager/tsconfig.json --noEmit`
+7. `npm test` (Ensures 100% passing unit tests across all monorepo packages; executed in-band with 1 worker).
+8. `npm run test:e2e` (Run **ONLY** when not in a resource-constrained environment; skip in low-memory/low-CPU environments unless explicitly requested).
+9. `npm run build` (Ensures zero build errors and verifies `dist/` packaging).
