@@ -2,6 +2,8 @@ const path = require('path');
 
 /** @type {import('jest').Config} */
 module.exports = {
+  maxWorkers: 1,
+  workerIdleMemoryLimit: '256MB',
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {

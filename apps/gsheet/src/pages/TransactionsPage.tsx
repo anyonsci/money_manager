@@ -164,7 +164,6 @@ export const TransactionsPage: React.FC = () => {
         loadedCount={filteredTransactions.length}
         totalCount={totalCount}
         batchSize={200}
-        autoScroll={true}
       />
 
       <TransactionModal

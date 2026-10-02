@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import type { FC } from 'react';
 import { Loader2, ArrowDownCircle, CheckCircle2 } from 'lucide-react';
 
 export interface LoadMoreButtonProps {
@@ -8,44 +8,20 @@ export interface LoadMoreButtonProps {
   loadedCount?: number;
   totalCount?: number;
   batchSize?: number;
+  /** @deprecated Auto scroll on page intersection has been removed; manual button click is required */
   autoScroll?: boolean;
   className?: string;
 }
 
-export const LoadMoreButton: React.FC<LoadMoreButtonProps> = ({
+export const LoadMoreButton: FC<LoadMoreButtonProps> = ({
   onLoadMore,
   hasMore,
   isLoading = false,
   loadedCount,
   totalCount,
   batchSize = 200,
-  autoScroll = true,
   className = '',
 }) => {
-  const sentinelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!autoScroll || !hasMore || isLoading || typeof IntersectionObserver === 'undefined') return;
-
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const first = entries[0];
-        if (first && first.isIntersecting) {
-          onLoadMore();
-        }
-      },
-      { rootMargin: '120px' }
-    );
-
-    observer.observe(sentinel);
-    return () => {
-      observer.disconnect();
-    };
-  }, [autoScroll, hasMore, isLoading, onLoadMore]);
-
   if (!hasMore) {
     if (!loadedCount || loadedCount === 0) return null;
     return (
@@ -80,7 +56,7 @@ export const LoadMoreButton: React.FC<LoadMoreButtonProps> = ({
         type="button"
         onClick={onLoadMore}
         disabled={isLoading}
-        className="flex items-center gap-2 rounded-2xl border border-slate-700/80 bg-slate-900/90 px-5 py-2.5 text-xs font-semibold text-white shadow-lg hover:border-brand-500 hover:bg-slate-800 transition active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+        className="flex items-center gap-2 rounded-2xl border border-slate-700/80 bg-slate-900/90 px-5 py-2.5 text-xs font-semibold text-white shadow-lg hover:border-brand-500 hover:bg-slate-800 transition active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
         data-testid="load-more-button"
       >
         {isLoading ? (
@@ -100,9 +76,6 @@ export const LoadMoreButton: React.FC<LoadMoreButtonProps> = ({
           </>
         )}
       </button>
-
-      {/* Invisible sentinel element for infinite scroll auto-trigger */}
-      <div ref={sentinelRef} className="h-1 w-full" aria-hidden="true" />
     </div>
   );
 };
