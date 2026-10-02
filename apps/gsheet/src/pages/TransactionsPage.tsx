@@ -38,12 +38,10 @@ export const TransactionsPage: React.FC = () => {
   const [selectedTx, setSelectedTx] = useState<UnifiedTransaction | null>(null);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'expense' | 'income'>('all');
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((t) => {
       if (!t) return false;
-      if (typeFilter !== 'all' && t.type !== typeFilter) return false;
       if (categoryFilter && String(t.category ?? '').toLowerCase() !== categoryFilter.toLowerCase()) return false;
       if (search) {
         const query = search.toLowerCase();
@@ -58,7 +56,7 @@ export const TransactionsPage: React.FC = () => {
       }
       return true;
     });
-  }, [transactions, search, categoryFilter, typeFilter]);
+  }, [transactions, search, categoryFilter]);
 
   const handleEdit = (tx: UnifiedTransaction) => {
     setSelectedTx(tx);
@@ -102,7 +100,7 @@ export const TransactionsPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
         <div className="relative">
           <Search size={16} className="absolute left-3 top-3 text-slate-500" />
           <input
@@ -128,23 +126,6 @@ export const TransactionsPage: React.FC = () => {
               </option>
             ))}
           </select>
-        </div>
-
-        <div className="flex items-center rounded-xl bg-slate-950 p-1 border border-slate-800">
-          {(['all', 'expense', 'income'] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTypeFilter(t)}
-              className={`flex-1 rounded-lg py-1.5 text-xs font-semibold capitalize transition ${
-                typeFilter === t
-                  ? 'bg-brand-600 text-white'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              {t}
-            </button>
-          ))}
         </div>
       </div>
 

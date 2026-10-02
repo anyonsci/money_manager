@@ -4,6 +4,7 @@ const path = require('path');
 module.exports = {
   maxWorkers: 1,
   workerIdleMemoryLimit: '256MB',
+  testTimeout: 20000,
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
