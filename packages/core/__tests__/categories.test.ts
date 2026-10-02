@@ -6,6 +6,9 @@ import {
   getCanonicalCategory,
   matchCategoriesByPrefix,
   resolveCategory,
+  CATEGORY_HEX_COLORS,
+  DEFAULT_CHART_PALETTE,
+  getCategoryHexColor,
 } from '../src/constants/categories';
 
 describe('Core Constants - Categories', () => {
@@ -148,6 +151,34 @@ describe('Core Constants - Categories', () => {
     it('falls back to others for unknown or empty category', () => {
       expect(getCategoryColor('unknown_xyz')).toEqual(CATEGORY_COLORS.others);
       expect(getCategoryColor('')).toEqual(CATEGORY_COLORS.others);
+    });
+  });
+
+  describe('CATEGORY_HEX_COLORS and getCategoryHexColor', () => {
+    it('defines hex colors for all canonical categories', () => {
+      ALLOWED_CATEGORIES.forEach((cat) => {
+        const hex = CATEGORY_HEX_COLORS[cat];
+        expect(hex).toBeDefined();
+        expect(hex).toMatch(/^#[0-9a-f]{6}$/i);
+      });
+    });
+
+    it('returns canonical hex color for exact and mixed-case category names', () => {
+      expect(getCategoryHexColor('food')).toBe('#f59e0b');
+      expect(getCategoryHexColor('FOOD')).toBe('#f59e0b');
+      expect(getCategoryHexColor('Travel')).toBe('#3b82f6');
+      expect(getCategoryHexColor('  medical  ')).toBe('#f43f5e');
+    });
+
+    it('resolves compound category names to hex color', () => {
+      expect(getCategoryHexColor('Food & Dining')).toBe('#f59e0b');
+      expect(getCategoryHexColor('Travel / Flight')).toBe('#3b82f6');
+    });
+
+    it('falls back to indexed palette or others for unknown category', () => {
+      expect(getCategoryHexColor('unknown_custom', 0)).toBe(DEFAULT_CHART_PALETTE[0]);
+      expect(getCategoryHexColor('unknown_custom', 1)).toBe(DEFAULT_CHART_PALETTE[1]);
+      expect(getCategoryHexColor('')).toBe(CATEGORY_HEX_COLORS.others);
     });
   });
 });

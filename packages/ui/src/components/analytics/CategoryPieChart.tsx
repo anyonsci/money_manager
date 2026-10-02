@@ -1,35 +1,29 @@
 import React, { useMemo } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
-import { UnifiedTransaction, formatCurrency, getCategoryIcon } from '@money-manager/core';
+import {
+  UnifiedTransaction,
+  formatCurrency,
+  getCategoryIcon,
+  getCanonicalCategory,
+  getCategoryHexColor,
+} from '@money-manager/core';
 
 export interface CategoryPieChartProps {
   transactions: UnifiedTransaction[];
   currency?: string;
   locale?: string;
   title?: string;
+  subtitle?: string;
+  emptyMessage?: string;
 }
-
-const PALETTE = [
-  '#f59e0b', // Amber
-  '#3b82f6', // Blue
-  '#8b5cf6', // Purple
-  '#10b981', // Emerald
-  '#6366f1', // Indigo
-  '#f43f5e', // Rose
-  '#14b8a6', // Teal
-  '#0ea5e9', // Sky
-  '#f97316', // Orange
-  '#ef4444', // Red
-  '#a855f7', // Violet
-  '#06b6d4', // Cyan
-  '#64748b', // Slate
-];
 
 export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   transactions,
   currency = 'INR',
   locale = 'en-IN',
-  title = 'Spending by Category'
+  title = 'Spending by Category',
+  subtitle,
+  emptyMessage = 'No expense data available for the selected period',
 }) => {
   const chartData = useMemo(() => {
     const map = new Map<string, number>();
@@ -37,8 +31,8 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
     transactions
       .filter((t) => t.type === 'expense' && t.status !== 'VOID')
       .forEach((t) => {
-        const cat = t.category || 'Others';
-        map.set(cat, (map.get(cat) || 0) + t.amount);
+        const cat = getCanonicalCategory(t.category) || 'others';
+        map.set(cat, (map.get(cat) || 0) + (Number(t.amount) || 0));
       });
 
     return Array.from(map.entries())
@@ -54,7 +48,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   if (chartData.length === 0) {
     return (
       <div className="flex h-64 flex-col items-center justify-center rounded-3xl border border-slate-800 bg-slate-900/60 p-6 text-center text-slate-400">
-        <p className="text-sm">No expense data available for the selected period</p>
+        <p className="text-sm">{emptyMessage}</p>
       </div>
     );
   }
@@ -62,7 +56,10 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   return (
     <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur shadow-lg">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-bold text-white tracking-tight">{title}</h3>
+        <div>
+          <h3 className="text-base font-bold text-white tracking-tight">{title}</h3>
+          {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
+        </div>
         <span className="text-xs text-slate-400">
           Total: <strong className="text-slate-200">{formatCurrency(totalExpense, currency, locale)}</strong>
         </span>
@@ -84,7 +81,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
               {chartData.map((_, index) => (
                 <Cell
                   key={`cell-${index}`}
-                  fill={PALETTE[index % PALETTE.length]}
+                  fill={getCategoryHexColor(chartData[index].name, index)}
                   stroke="#0f172a"
                   strokeWidth={2}
                 />
@@ -98,7 +95,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
                   const percentage = totalExpense > 0 ? ((value / totalExpense) * 100).toFixed(1) : '0';
                   return (
                     <div className="rounded-2xl border border-slate-700 bg-slate-950 p-3 shadow-xl text-xs">
-                      <p className="font-semibold text-white">{data.name}</p>
+                      <p className="font-semibold text-white capitalize">{data.name}</p>
                       <p className="text-brand-400 font-bold mt-1">
                         {formatCurrency(value, currency, locale)}{' '}
                         <span className="text-slate-400 font-normal">({percentage}%)</span>
@@ -116,7 +113,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
       {/* Category Legends */}
       <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 max-h-40 overflow-y-auto pr-1">
         {chartData.map((item, index) => {
-          const color = PALETTE[index % PALETTE.length];
+          const color = getCategoryHexColor(item.name, index);
           const pct = totalExpense > 0 ? ((item.value / totalExpense) * 100).toFixed(0) : '0';
           return (
             <div key={item.name} className="flex items-center gap-2 text-xs">
@@ -126,7 +123,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
               />
               <span className="truncate text-slate-300 flex-1 flex items-center gap-1.5">
                 <span className="text-sm leading-none">{getCategoryIcon(item.name)}</span>
-                <span>{item.name}</span>
+                <span className="capitalize">{item.name}</span>
               </span>
               <span className="text-[11px] text-slate-500 font-medium">{pct}%</span>
             </div>

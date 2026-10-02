@@ -57,6 +57,69 @@ export const getCategoryColor = (
   return (matched && CATEGORY_COLORS[matched]) || CATEGORY_COLORS.others;
 };
 
+export const CATEGORY_HEX_COLORS: Record<string, string> = {
+  food: '#f59e0b',          // Amber
+  travel: '#3b82f6',        // Blue
+  entertainment: '#8b5cf6', // Purple
+  need: '#10b981',          // Emerald
+  material: '#6366f1',      // Indigo
+  medical: '#f43f5e',       // Rose
+  wellness: '#14b8a6',      // Teal
+  trip: '#0ea5e9',          // Sky
+  maintenance: '#f97316',   // Orange
+  rent: '#ef4444',          // Red
+  recurring: '#a855f7',     // Violet
+  salary: '#10b981',        // Emerald
+  investment: '#06b6d4',    // Cyan
+  others: '#64748b',        // Slate
+};
+
+export const DEFAULT_CHART_PALETTE = [
+  '#f59e0b', // Amber
+  '#3b82f6', // Blue
+  '#8b5cf6', // Purple
+  '#10b981', // Emerald
+  '#6366f1', // Indigo
+  '#f43f5e', // Rose
+  '#14b8a6', // Teal
+  '#0ea5e9', // Sky
+  '#f97316', // Orange
+  '#ef4444', // Red
+  '#a855f7', // Violet
+  '#06b6d4', // Cyan
+  '#64748b', // Slate
+];
+
+/**
+ * Returns category hex color for chart rendering.
+ */
+export const getCategoryHexColor = (
+  category?: unknown,
+  fallbackIndex: number = 0
+): string => {
+  const normalized = String(category ?? '').trim().toLowerCase();
+  if (!normalized) return CATEGORY_HEX_COLORS.others;
+
+  if (CATEGORY_HEX_COLORS[normalized]) {
+    return CATEGORY_HEX_COLORS[normalized];
+  }
+
+  const matched = ALLOWED_CATEGORIES.find(
+    (cat) =>
+      cat !== 'others' &&
+      (normalized.startsWith(cat) || normalized.split(/[\s&/_-]+/).includes(cat))
+  );
+
+  if (matched && CATEGORY_HEX_COLORS[matched]) {
+    return CATEGORY_HEX_COLORS[matched];
+  }
+
+  return (
+    DEFAULT_CHART_PALETTE[fallbackIndex % DEFAULT_CHART_PALETTE.length] ||
+    CATEGORY_HEX_COLORS.others
+  );
+};
+
 /**
  * Checks if a given category string matches an allowed category (case-insensitive).
  */
@@ -72,6 +135,29 @@ export const getCanonicalCategory = (category?: unknown): string => {
   const normalized = String(category ?? '').trim().toLowerCase();
   const found = ALLOWED_CATEGORIES.find(cat => cat.toLowerCase() === normalized);
   return found || String(category ?? '');
+};
+
+export const ESSENTIAL_CATEGORIES: readonly string[] = [
+  'need',
+  'rent',
+  'medical',
+  'maintenance',
+  'recurring',
+];
+
+export const DISCRETIONARY_CATEGORIES: readonly string[] = [
+  'food',
+  'entertainment',
+  'travel',
+  'trip',
+  'material',
+  'wellness',
+  'others',
+];
+
+export const isEssentialCategory = (category?: unknown): boolean => {
+  const canonical = getCanonicalCategory(category).toLowerCase();
+  return ESSENTIAL_CATEGORIES.includes(canonical);
 };
 
 export interface CategoryResolution {

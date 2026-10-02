@@ -5,6 +5,7 @@ import './index.css';
 
 import { AnalyticsSummaryFixture } from './fixtures/AnalyticsSummaryFixture';
 import { CategoryPieChartFixture } from './fixtures/CategoryPieChartFixture';
+import { MonthlyExpenseChartFixture } from './fixtures/MonthlyExpenseChartFixture';
 import { TransactionCardFixture } from './fixtures/TransactionCardFixture';
 import { TransactionListFixture } from './fixtures/TransactionListFixture';
 import { TransactionModalFixture } from './fixtures/TransactionModalFixture';
@@ -15,6 +16,7 @@ import { PaginationLoaderFixture } from './fixtures/PaginationLoaderFixture';
 const NavigationHub: React.FC = () => {
   const routes = [
     { path: '/analytics-summary', label: 'AnalyticsSummary Component' },
+    { path: '/monthly-expense-chart', label: 'MonthlyExpenseChart Component' },
     { path: '/category-pie-chart', label: 'CategoryPieChart Component' },
     { path: '/transaction-card', label: 'TransactionCard Component' },
     { path: '/transaction-list', label: 'TransactionList Component' },
@@ -51,6 +53,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<NavigationHub />} />
         <Route path="/analytics-summary" element={<AnalyticsSummaryFixture />} />
+        <Route path="/monthly-expense-chart" element={<MonthlyExpenseChartFixture />} />
         <Route path="/category-pie-chart" element={<CategoryPieChartFixture />} />
         <Route path="/transaction-card" element={<TransactionCardFixture />} />
         <Route path="/transaction-list" element={<TransactionListFixture />} />

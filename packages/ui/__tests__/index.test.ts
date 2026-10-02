@@ -9,6 +9,13 @@ describe('UI Index Exports', () => {
     expect(UIExports.PwaInstallPrompt).toBeDefined();
     expect(UIExports.AnalyticsSummary).toBeDefined();
     expect(UIExports.CategoryPieChart).toBeDefined();
+    expect(UIExports.MonthlyExpenseChart).toBeDefined();
+    expect(UIExports.SpendingPaceChart).toBeDefined();
+    expect(UIExports.NeedsWantsSplit).toBeDefined();
+    expect(UIExports.AccountOutflowList).toBeDefined();
+    expect(UIExports.DayOfWeekSpending).toBeDefined();
+    expect(UIExports.CategoryMoMTrends).toBeDefined();
+    expect(UIExports.SubcategoryBreakdown).toBeDefined();
     expect(UIExports.TransactionCard).toBeDefined();
     expect(UIExports.TransactionList).toBeDefined();
     expect(UIExports.TransactionModal).toBeDefined();
