@@ -11,7 +11,7 @@ import {
   ALLOWED_CATEGORIES,
   getCategoryIcon,
 } from '@money-manager/core';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Wallet } from 'lucide-react';
 
 export const TransactionsPage: React.FC = () => {
   const {
@@ -38,11 +38,30 @@ export const TransactionsPage: React.FC = () => {
   const [selectedTx, setSelectedTx] = useState<UnifiedTransaction | null>(null);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [accountFilter, setAccountFilter] = useState('');
+
+  const availableAccounts = useMemo(() => {
+    const set = new Set<string>();
+    const list: string[] = [];
+
+    if (Array.isArray(transactions)) {
+      for (const t of transactions) {
+        const acc = t.account != null ? String(t.account).trim() : '';
+        if (acc && !set.has(acc.toLowerCase())) {
+          set.add(acc.toLowerCase());
+          list.push(acc);
+        }
+      }
+    }
+
+    return list.sort((a, b) => a.localeCompare(b));
+  }, [transactions]);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter((t) => {
       if (!t) return false;
       if (categoryFilter && String(t.category ?? '').toLowerCase() !== categoryFilter.toLowerCase()) return false;
+      if (accountFilter && String(t.account ?? '').toLowerCase() !== accountFilter.toLowerCase()) return false;
       if (search) {
         const query = search.toLowerCase();
         const matchesAccount = String(t.account ?? '').toLowerCase().includes(query);
@@ -56,7 +75,7 @@ export const TransactionsPage: React.FC = () => {
       }
       return true;
     });
-  }, [transactions, search, categoryFilter]);
+  }, [transactions, search, categoryFilter, accountFilter]);
 
   const handleEdit = (tx: UnifiedTransaction) => {
     setSelectedTx(tx);
@@ -100,7 +119,7 @@ export const TransactionsPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
         <div className="relative">
           <Search size={16} className="absolute left-3 top-3 text-slate-500" />
           <input
@@ -118,11 +137,29 @@ export const TransactionsPage: React.FC = () => {
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-9 pr-3 py-2 text-xs text-white focus:border-brand-500 focus:outline-none"
+            aria-label="Filter by category"
           >
             <option value="">All Categories</option>
             {ALLOWED_CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
                 {getCategoryIcon(cat)} {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="relative">
+          <Wallet size={16} className="absolute left-3 top-3 text-slate-500" />
+          <select
+            value={accountFilter}
+            onChange={(e) => setAccountFilter(e.target.value)}
+            className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-9 pr-3 py-2 text-xs text-white focus:border-brand-500 focus:outline-none"
+            aria-label="Filter by account"
+          >
+            <option value="">All Accounts</option>
+            {availableAccounts.map((acc) => (
+              <option key={acc} value={acc}>
+                {acc}
               </option>
             ))}
           </select>

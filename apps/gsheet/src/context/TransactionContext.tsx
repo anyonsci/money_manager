@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, ReactNode, useCallback } from 'react';
 import { UnifiedTransaction, TransactionFormValues } from '@money-manager/core';
 import { gsheetStorageAdapter } from '../adapters/GSheetStorageAdapter';
 import { useAuth } from './AuthContext';
@@ -34,9 +34,13 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [hasMore, setHasMore] = useState(false);
   const [hasLoadedInitially, setHasLoadedInitially] = useState(false);
   const [totalCount, setTotalCount] = useState<number | undefined>(undefined);
+  const isFetchingRef = useRef(false);
+  const isFetchingMoreRef = useRef(false);
 
   const loadTransactions = useCallback(async (nextPage = 1, forceRefresh = false) => {
     if (!accessToken && !forceRefresh) return;
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     setLoading(true);
     try {
       const response = await gsheetStorageAdapter.fetchTransactions({
@@ -55,11 +59,13 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       console.error('Failed to load transactions:', error);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, [accessToken]);
 
   const loadMoreTransactions = useCallback(async () => {
-    if (!accessToken || loadingMore || loading || !hasMore) return;
+    if (!accessToken || isFetchingMoreRef.current || loadingMore || loading || !hasMore) return;
+    isFetchingMoreRef.current = true;
     setLoadingMore(true);
     try {
       const currentOffset = transactions.length;
@@ -88,18 +94,9 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({ childre
       console.error('Failed to load more transactions:', error);
     } finally {
       setLoadingMore(false);
+      isFetchingMoreRef.current = false;
     }
   }, [accessToken, loadingMore, loading, hasMore, transactions.length, totalCount]);
-
-  useEffect(() => {
-    if (accessToken && !hasLoadedInitially) {
-      const hash = typeof window !== 'undefined' ? window.location.hash : '';
-      const isHome = !hash || hash === '#/' || hash === '#' || hash === '';
-      if (!isHome) {
-        loadTransactions(1);
-      }
-    }
-  }, [accessToken, hasLoadedInitially, loadTransactions]);
 
   const createTransactionItem = async (values: TransactionFormValues): Promise<UnifiedTransaction | undefined> => {
     try {

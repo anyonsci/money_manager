@@ -92,4 +92,44 @@ describe('TransactionsPage Search', () => {
     fireEvent.click(loadMoreBtn);
     expect(mockLoadMoreTransactions).toHaveBeenCalled();
   });
+
+  it('prefills account dropdown from transactions and filters by selected account', () => {
+    mockTransactionsList = [
+      {
+        id: 'tx-1',
+        amount: 50,
+        account: 'HDFC Bank',
+        category: 'Food',
+        subCategory: 'Lunch',
+        note: 'Restaurant',
+        type: 'expense',
+        status: 'POSTED',
+        transactionDate: '2026-08-01',
+      },
+      {
+        id: 'tx-2',
+        amount: 150,
+        account: 'ICICI Credit Card',
+        category: 'Shopping',
+        subCategory: 'Clothes',
+        note: 'New shirt',
+        type: 'expense',
+        status: 'POSTED',
+        transactionDate: '2026-08-02',
+      },
+    ];
+
+    render(<TransactionsPage />);
+
+    const accountSelect = screen.getByLabelText(/filter by account/i);
+    expect(accountSelect).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'HDFC Bank' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'ICICI Credit Card' })).toBeInTheDocument();
+
+    // Select HDFC Bank
+    fireEvent.change(accountSelect, { target: { value: 'HDFC Bank' } });
+
+    expect(screen.getByText('Restaurant')).toBeInTheDocument();
+    expect(screen.queryByText('New shirt')).not.toBeInTheDocument();
+  });
 });

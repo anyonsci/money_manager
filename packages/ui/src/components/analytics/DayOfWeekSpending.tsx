@@ -21,8 +21,6 @@ export const DayOfWeekSpending: React.FC<DayOfWeekSpendingProps> = ({
     dayTotals,
     maxSpend,
     totalExpense,
-    weekdayTotal,
-    weekendTotal,
     weekdayAvg,
     weekendAvg,
     weekendMultiplier,

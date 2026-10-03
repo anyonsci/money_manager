@@ -33,7 +33,6 @@ export const SpendingPaceChart: React.FC<SpendingPaceChartProps> = ({
   const {
     chartData,
     currentMonthTotalToDate,
-    prevMonthTotalToDate,
     prevMonthFullTotal,
     pacePercentage,
     isPacingHigher,

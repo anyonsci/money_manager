@@ -30,6 +30,7 @@ export const AnalyticsPage: React.FC = () => {
   const {
     transactions,
     loading,
+    loadingMore,
     hasLoadedInitially,
     loadTransactions,
     hasMore,
@@ -38,14 +39,24 @@ export const AnalyticsPage: React.FC = () => {
 
   const [dateFilter, setDateFilter] = useState<'6months' | 'month' | 'year' | 'all'>('6months');
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
+  const hasRequestedMoreRef = React.useRef(false);
 
   useEffect(() => {
     if (!hasLoadedInitially && !loading) {
       loadTransactions(1);
-    } else if (hasLoadedInitially && hasMore && transactions.length <= 10 && !loading && loadMoreTransactions) {
+    } else if (
+      hasLoadedInitially &&
+      hasMore &&
+      transactions.length <= 10 &&
+      !loading &&
+      !loadingMore &&
+      !hasRequestedMoreRef.current &&
+      loadMoreTransactions
+    ) {
+      hasRequestedMoreRef.current = true;
       loadMoreTransactions();
     }
-  }, [hasLoadedInitially, loading, loadTransactions, hasMore, transactions.length, loadMoreTransactions]);
+  }, [hasLoadedInitially, loading, loadingMore, loadTransactions, hasMore, transactions.length, loadMoreTransactions]);
 
   const past6MonthKeys = useMemo(() => {
     const keys = new Set<string>();
