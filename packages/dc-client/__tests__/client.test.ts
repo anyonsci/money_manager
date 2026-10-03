@@ -34,6 +34,14 @@ describe('DC Client - API Client', () => {
       (globalThis as any).__import_meta.env.VITE_API_URL = 'my-custom-api.com';
       expect(getDcApiBaseUrl()).toBe('https://my-custom-api.com');
     });
+
+    it('strips trailing /api or /api/ to prevent duplicate /api in endpoint calls', () => {
+      (globalThis as any).__import_meta.env.VITE_BACKEND_URL = 'https://money-manager-backend-tau.vercel.app/api';
+      expect(getDcApiBaseUrl()).toBe('https://money-manager-backend-tau.vercel.app');
+
+      (globalThis as any).__import_meta.env.VITE_BACKEND_URL = 'https://money-manager-backend-tau.vercel.app/api/';
+      expect(getDcApiBaseUrl()).toBe('https://money-manager-backend-tau.vercel.app');
+    });
   });
 
   describe('apiClient instance and interceptors', () => {

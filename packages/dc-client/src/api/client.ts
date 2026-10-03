@@ -15,7 +15,9 @@ export const getDcApiBaseUrl = (): string => {
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL) ||
     (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) ||
     DEFAULT_FALLBACK_URL;
-  const rawApiUrl = (String(envUrl) || DEFAULT_FALLBACK_URL).trim().replace(/\/$/, '');
+  let rawApiUrl = (String(envUrl) || DEFAULT_FALLBACK_URL).trim().replace(/\/$/, '');
+  // Strip trailing /api to avoid duplicate /api in endpoint calls
+  rawApiUrl = rawApiUrl.replace(/\/api\/?$/i, '');
   return /^https?:\/\//i.test(rawApiUrl)
     ? rawApiUrl
     : rawApiUrl.includes('localhost') || rawApiUrl.includes('127.0.0.1')
