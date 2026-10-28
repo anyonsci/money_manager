@@ -10,17 +10,17 @@
   },
   "dependencies": {
     "@money-manager/core": "*",
+    "@money-manager/dc-client": "*",
+    "@money-manager/pwa": "*",
+    "@money-manager/tailwind-preset": "*",
     "@money-manager/ui": "*",
-    "@supabase/supabase-js": "^2.116.0",
+    "@react-oauth/google": "^0.12.1",
     "axios": "^1.19.0",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.21.0",
-    "recharts": "^2.14.0",
-    "@money-manager/pwa": "*",
-    "@money-manager/tailwind-preset": "*",
-    "@money-manager/dc-client": "*"
+    "recharts": "^2.14.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",

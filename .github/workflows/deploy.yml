@@ -39,9 +39,8 @@ jobs:
       - name: Build All Frontends & Root Portal
         run: npm run build
         env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://cmbjedfxyrrytsafymmm.supabase.co' }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_6VPhNR8k-QeDrxK84BKNpA_HdNUo8q2' }}
-          VITE_SUPABASE_REDIRECT_URL: ${{ secrets.VITE_SUPABASE_REDIRECT_URL }}
+          VITE_AUTH_BACKEND_URL: ${{ secrets.VITE_AUTH_BACKEND_URL || 'https://idp-server.vercel.app' }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID || '719964045968-cmh03lg080igf8f4lh8ng70mhhbqtt3q.apps.googleusercontent.com' }}
           VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL || 'https://money-manager-backend-tau.vercel.app' }}
           VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://money-manager-backend-tau.vercel.app' }}
           VITE_APPS_SCRIPT_URL: ${{ secrets.VITE_APPS_SCRIPT_URL }}

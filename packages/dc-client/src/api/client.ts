@@ -1,5 +1,4 @@
 import axios, { AxiosInstance } from 'axios';
-import { supabase } from '@money-manager/core';
 import {
   getStoredAccessToken,
   setStoredAccessToken,
@@ -32,20 +31,9 @@ export const apiClient: AxiosInstance = axios.create({
   },
 });
 
-// Request Interceptor: Attach Supabase Bearer JWT
+// Request Interceptor: Attach Centralized IdP Bearer JWT
 apiClient.interceptors.request.use(async (config) => {
-  let token: string | null = null;
-  try {
-    const { data } = await supabase.auth.getSession();
-    token = data.session?.access_token || null;
-  } catch {
-    // In mock/test environment
-  }
-
-  if (!token) {
-    token = getStoredAccessToken();
-  }
-
+  const token = getStoredAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -90,22 +78,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      // 1. Primary: Attempt Supabase session refresh
-      try {
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-        const newAccessToken = refreshData?.session?.access_token;
-        if (!refreshError && newAccessToken) {
-          apiClient.defaults.headers.common.Authorization = `Bearer ${newAccessToken}`;
-          processQueue(null, newAccessToken);
-          isRefreshing = false;
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-          return apiClient(originalRequest);
-        }
-      } catch {
-        // Continue to fallback below
-      }
-
-      // 2. Fallback: Legacy refresh token flow for tests and backward compatibility
+      // Refresh token flow if refresh token is available
       const refreshToken = getStoredRefreshToken();
       if (!refreshToken) {
         isRefreshing = false;

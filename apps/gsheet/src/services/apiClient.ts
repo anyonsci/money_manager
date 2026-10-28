@@ -1,5 +1,4 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { supabase } from '@money-manager/core';
 import {
   clearAllAuthTokens,
   getStoredAccessToken,
@@ -41,16 +40,7 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     // 1. Fast path: Check synchronous local storage first (zero async overhead)
-    let token: string | null = getStoredAccessToken();
-
-    if (!token) {
-      try {
-        const { data } = await supabase.auth.getSession();
-        token = data.session?.access_token || null;
-      } catch {
-        // Supabase not initialized or running in test
-      }
-    }
+    const token = getStoredAccessToken();
 
     if (token) {
       // Inject accessToken into JSON payload body for Google Apps Script Web App
@@ -101,30 +91,7 @@ async function handleUnauthorizedResponse(originalRequest: InternalAxiosRequestC
   originalRequest._retry = true;
   isRefreshing = true;
 
-  // 1. Primary: Attempt Supabase session refresh
-  try {
-    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-    const newAccessToken = refreshData?.session?.access_token;
-    if (!refreshError && newAccessToken) {
-      if (originalRequest.data) {
-        try {
-          const dataObj = typeof originalRequest.data === 'string' ? JSON.parse(originalRequest.data) : originalRequest.data;
-          if (typeof dataObj === 'object' && dataObj !== null) {
-            dataObj.accessToken = newAccessToken;
-            originalRequest.data = JSON.stringify(dataObj);
-          }
-        } catch {}
-      }
-
-      processQueue(null, newAccessToken);
-      isRefreshing = false;
-      return apiClient(originalRequest);
-    }
-  } catch {
-    // Continue to fallback below
-  }
-
-  // 2. Fallback: Legacy refresh token flow for backward compatibility
+  // Refresh token flow if refresh token is available
   const refreshToken = getStoredRefreshToken();
   const user = getStoredUser();
 

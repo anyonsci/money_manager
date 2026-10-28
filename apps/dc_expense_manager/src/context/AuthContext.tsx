@@ -1,9 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, mapSupabaseUser } from '@money-manager/core';
+import axios from 'axios';
+import { AUTH_BACKEND_URL } from '@money-manager/core';
 import {
   api,
   clearAllAuthTokens,
-  UserProfile
+  getStoredAccessToken,
+  setStoredAccessToken,
+  getStoredUser,
+  setStoredUser,
+  UserProfile,
 } from '@money-manager/dc-client';
 
 interface AuthContextType {
@@ -18,85 +23,79 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(() => getStoredUser());
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     let mounted = true;
+    const token = getStoredAccessToken();
 
-    // 1. Check existing session on load (handles PKCE code exchange in URL automatically)
-    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
-      if (!mounted) return;
-      if (error || !session?.user) {
-        setUser(null);
-        setIsLoading(false);
-        return;
-      }
+    if (!token) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
 
-      const initialUser = mapSupabaseUser(session.user);
-      setUser(initialUser);
-
-      try {
-        const res = await api.auth.getMe();
-        if (res.success && res.data?.user && mounted) {
+    // Validate and refresh profile against backend
+    api.auth.getMe()
+      .then((res) => {
+        if (mounted && res.success && res.data?.user) {
           setUser(res.data.user);
+          setStoredUser(res.data.user);
         }
-      } catch {
-        // Backend request will succeed once available
-      } finally {
+      })
+      .catch(() => {
+        if (mounted && !getStoredUser()) {
+          setUser(null);
+          clearAllAuthTokens();
+        }
+      })
+      .finally(() => {
         if (mounted) setIsLoading(false);
-      }
-    }).catch(() => {
-      if (mounted) {
-        setUser(null);
-        setIsLoading(false);
-      }
-    });
-
-    // 2. Subscribe to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-      if (session?.user) {
-        const mapped = mapSupabaseUser(session.user);
-        setUser(mapped);
-        setIsLoading(false);
-
-        if (event === 'SIGNED_IN') {
-          try {
-            const res = await api.auth.getMe();
-            if (res.success && res.data?.user && mounted) {
-              setUser(res.data.user);
-            }
-          } catch {
-            // Ignore
-          }
-        }
-      } else {
-        setUser(null);
-        setIsLoading(false);
-      }
-    });
+      });
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
     };
   }, []);
 
-  const loginWithGoogle = async (_idToken?: string) => {
+  const loginWithGoogle = async (idToken?: string) => {
+    if (!idToken) {
+      throw new Error('Google identity token is required.');
+    }
+
     setIsLoading(true);
     try {
-      const defaultRedirectUrl = `${window.location.origin}${window.location.pathname}`;
-      const authRedirectUrl = import.meta.env.VITE_SUPABASE_REDIRECT_URL || defaultRedirectUrl;
+      const endpoint = `${AUTH_BACKEND_URL.replace(/\/+$/, '')}/api/auth/google`;
+      const response = await axios.post(
+        endpoint,
+        { idToken },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: authRedirectUrl,
-          scopes: 'openid email profile',
-        },
-      });
-      if (error) throw error;
+      const token = response.data?.token;
+      const userProfile = response.data?.user;
+
+      if (!token) {
+        throw new Error('Authentication backend did not return a session token.');
+      }
+
+      setStoredAccessToken(token);
+      if (userProfile) {
+        setStoredUser(userProfile);
+        setUser(userProfile);
+      }
+
+      // Sync with derivecount backend
+      try {
+        const meRes = await api.auth.getMe();
+        if (meRes.success && meRes.data?.user) {
+          setUser(meRes.data.user);
+          setStoredUser(meRes.data.user);
+        }
+      } catch {
+        // Non-fatal if derivecount backend is cold
+      }
     } finally {
       setIsLoading(false);
     }
@@ -113,14 +112,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      // Ignore network errors on logout
-    } finally {
-      clearAllAuthTokens();
-      setUser(null);
-    }
+    clearAllAuthTokens();
+    setUser(null);
   };
 
   return (
