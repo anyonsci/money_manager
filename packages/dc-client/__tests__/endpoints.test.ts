@@ -16,24 +16,10 @@ describe('DC Client - API Endpoints', () => {
   });
 
   describe('auth endpoints', () => {
-    it('calls googleLogin with idToken', async () => {
-      (apiClient.post as jest.Mock).mockResolvedValueOnce({ data: { success: true } });
-      const result = await api.auth.googleLogin('google-id-token');
-      expect(apiClient.post).toHaveBeenCalledWith('/api/auth/google', { token: 'google-id-token' });
-      expect(result).toEqual({ success: true });
-    });
-
     it('calls getMe', async () => {
       (apiClient.get as jest.Mock).mockResolvedValueOnce({ data: { success: true, data: { user: {} } } });
       const result = await api.auth.getMe();
       expect(apiClient.get).toHaveBeenCalledWith('/api/auth/me');
-      expect(result.success).toBe(true);
-    });
-
-    it('calls logout', async () => {
-      (apiClient.post as jest.Mock).mockResolvedValueOnce({ data: { success: true } });
-      const result = await api.auth.logout();
-      expect(apiClient.post).toHaveBeenCalledWith('/api/auth/logout');
       expect(result.success).toBe(true);
     });
   });

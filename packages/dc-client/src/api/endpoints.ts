@@ -11,21 +11,10 @@ import type {
 export const api = {
   // Authentication
   auth: {
-    googleLogin: async (idToken: string) => {
-      const response = await apiClient.post<ApiResponse<{ token: string; refreshToken: string; user: UserProfile }>>(
-        '/api/auth/google',
-        { token: idToken }
-      );
-      return response.data;
-    },
     getMe: async () => {
       const response = await apiClient.get<ApiResponse<{ user: UserProfile; workspaces: Workspace[] }>>(
         '/api/auth/me'
       );
-      return response.data;
-    },
-    logout: async () => {
-      const response = await apiClient.post<ApiResponse<{ message: string }>>('/api/auth/logout');
       return response.data;
     },
   },

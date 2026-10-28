@@ -84,58 +84,18 @@ describe('DC Client - API Client', () => {
       }
     });
 
-    it('clears tokens and rejects if no refresh token exists on 401', async () => {
+    it('clears tokens and rejects on 401', async () => {
       const responseErrorHandler = (apiClient.interceptors.response as any).handlers?.[0]?.rejected;
       if (responseErrorHandler) {
-        jest.spyOn(authModule, 'getStoredRefreshToken').mockReturnValue(null);
         const clearSpy = jest.spyOn(authModule, 'clearAllAuthTokens').mockImplementation(() => {});
 
         const err = {
-          config: { url: '/api/workspaces', _retry: false, headers: {} },
+          config: { url: '/api/workspaces', headers: {} },
           response: { status: 401 },
         };
 
         await expect(responseErrorHandler(err)).rejects.toEqual(err);
         expect(clearSpy).toHaveBeenCalled();
-      }
-    });
-
-    it('refreshes token on 401 and retries original request on success', async () => {
-      const responseErrorHandler = (apiClient.interceptors.response as any).handlers?.[0]?.rejected;
-      if (responseErrorHandler) {
-        jest.spyOn(authModule, 'getStoredRefreshToken').mockReturnValue('valid-refresh-token');
-        const setAccessSpy = jest.spyOn(authModule, 'setStoredAccessToken').mockImplementation(() => {});
-        const setRefreshSpy = jest.spyOn(authModule, 'setStoredRefreshToken').mockImplementation(() => {});
-
-        jest.spyOn(axios, 'post').mockResolvedValueOnce({
-          data: {
-            data: {
-              token: 'new-access-token',
-              refreshToken: 'new-refresh-token',
-            },
-          },
-        });
-
-        // Mock apiClient invocation for retry
-        const retryConfig = { url: '/api/workspaces', headers: {} as Record<string, string> };
-        const originalErr = {
-          config: retryConfig,
-          response: { status: 401 },
-        };
-
-        // Spy on apiClient
-        const clientSpy = jest.spyOn(apiClient, 'request').mockResolvedValueOnce({ data: { success: true } });
-
-        try {
-          await responseErrorHandler(originalErr);
-        } catch {
-          // In mock environment
-        }
-
-        expect(setAccessSpy).toHaveBeenCalledWith('new-access-token');
-        expect(setRefreshSpy).toHaveBeenCalledWith('new-refresh-token');
-
-        clientSpy.mockRestore();
       }
     });
   });
